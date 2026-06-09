@@ -16,7 +16,6 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const supabase = createServiceClient();
 
-  // 1. Find store
   const { data: loja, error: lojaError } = await supabase
     .from("lojas")
     .select("*")
@@ -28,7 +27,6 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
     return NextResponse.json({ error: "Loja não encontrada" }, { status: 404 });
   }
 
-  // 2. Read sheet
   let sheetRows;
   try {
     sheetRows = await readCatalogSheet(loja.sheet_id);
@@ -37,10 +35,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
     return NextResponse.json({ error: "Erro ao ler planilha" }, { status: 500 });
   }
 
-  // 3. Get all wine names from sheet
   const nomes = sheetRows.filter((r) => r.ativo).map((r) => r.nome);
 
-  // 4. Fetch wine details from DB
   const { data: vinhosDB } = await supabase
     .from("vinhos")
     .select("nome, produtor, uva, pais, regiao, imagem_url")
@@ -49,19 +45,16 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
   const vinhosMap: Record<string, VinhoDB> = {};
   (vinhosDB ?? []).forEach((v: VinhoDB) => { vinhosMap[v.nome] = v; });
 
-  // 5. Enrich and filter active items
   const itens: ItemCatalogo[] = sheetRows
     .filter((r) => r.ativo && r.estoque > 0)
-    .map((r) => ({
-      ...r,
-      ...(vinhosMap[r.nome] ?? {}),
-    }));
+    .map((r) => ({ ...r, ...(vinhosMap[r.nome] ?? {}) }));
 
   return NextResponse.json({
     loja: {
       nome: loja.nome,
       logo_url: loja.logo_url,
       slug: loja.slug,
+      cor_realce: loja.cor_realce || "#8B1A1A",
     },
     itens,
   });
