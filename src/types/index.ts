@@ -14,6 +14,7 @@ export interface Loja {
   slug: string;
   nome: string;
   logo_url: string | null;
+  cor_realce: string;
   sheet_id: string;
   ativo: boolean;
   created_at: string;
@@ -24,7 +25,6 @@ export interface ItemCatalogo {
   preco: string;
   estoque: number;
   ativo: boolean;
-  // enriched from DB
   produtor?: string;
   uva?: string;
   pais?: string;
