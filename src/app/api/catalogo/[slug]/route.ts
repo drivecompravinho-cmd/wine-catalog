@@ -3,6 +3,15 @@ import { createServiceClient } from "@/lib/supabase";
 import { readCatalogSheet } from "@/lib/sheets";
 import type { ItemCatalogo } from "@/types";
 
+interface VinhoDB {
+  nome: string;
+  produtor: string;
+  uva: string;
+  pais: string;
+  regiao: string;
+  imagem_url: string | null;
+}
+
 export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = createServiceClient();
@@ -37,8 +46,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
     .select("nome, produtor, uva, pais, regiao, imagem_url")
     .in("nome", nomes);
 
-  const vinhosMap: Record<string, (typeof vinhosDB)[0]> = {};
-  (vinhosDB ?? []).forEach((v) => { vinhosMap[v.nome] = v; });
+  const vinhosMap: Record<string, VinhoDB> = {};
+  (vinhosDB ?? []).forEach((v: VinhoDB) => { vinhosMap[v.nome] = v; });
 
   // 5. Enrich and filter active items
   const itens: ItemCatalogo[] = sheetRows
