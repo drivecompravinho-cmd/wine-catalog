@@ -16,6 +16,8 @@ export interface Loja {
   logo_url: string | null;
   cor_realce: string;
   sheet_id: string;
+  senha_cliente: string;
+  dominio_customizado: string | null;
   ativo: boolean;
   created_at: string;
 }
