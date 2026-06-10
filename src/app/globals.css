@@ -4,38 +4,88 @@
 
 @layer base {
   :root {
-    --wine: #8f1540;
-    --wine-light: #fce7eb;
-    --stone-dark: #1c1917;
+    --burgundy: #6B1F3A;
+    --burgundy-light: #8B2A4F;
+    --burgundy-muted: #f5eef1;
+    --surface: #ffffff;
+    --surface-2: #f8f7f8;
+    --surface-3: #f1eff2;
+    --border: #e8e5ea;
+    --text-1: #1a1520;
+    --text-2: #6b6572;
+    --text-3: #a09aaa;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, sans-serif; }
 }
 
 @layer components {
-  .btn-wine {
-    @apply bg-wine-800 text-white px-5 py-2.5 rounded-lg font-body font-medium text-sm
-           hover:bg-wine-950 transition-colors duration-200;
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm text-white transition-all duration-150;
+    background: var(--burgundy);
   }
+  .btn-primary:hover { background: var(--burgundy-light); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-150;
+    color: var(--text-2);
+    background: transparent;
+  }
+  .btn-ghost:hover { background: var(--surface-3); color: var(--text-1); }
 
   .btn-outline {
-    @apply border border-stone-300 text-stone-700 px-5 py-2.5 rounded-lg font-body font-medium text-sm
-           hover:border-wine-700 hover:text-wine-800 transition-colors duration-200;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-150;
+    border: 1.5px solid var(--border);
+    color: var(--text-2);
+    background: var(--surface);
   }
+  .btn-outline:hover { border-color: var(--burgundy); color: var(--burgundy); }
 
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
   }
 
   .input {
-    @apply w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800
-           focus:outline-none focus:ring-2 focus:ring-wine-300 focus:border-wine-500
-           placeholder:text-stone-400 transition;
+    @apply w-full px-3 py-2 text-sm rounded-xl transition-all duration-150 outline-none;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    color: var(--text-1);
   }
+  .input:focus {
+    background: var(--surface);
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(107,31,58,0.08);
+  }
+  .input::placeholder { color: var(--text-3); }
 
   .label {
-    @apply text-xs font-medium text-stone-500 uppercase tracking-wider mb-1 block;
+    @apply block text-xs font-semibold mb-1.5;
+    color: var(--text-2);
+    letter-spacing: 0.02em;
   }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-green { background: #edfaf3; color: #1a7a4a; }
+  .badge-gray { background: var(--surface-3); color: var(--text-2); }
+  .badge-wine { background: var(--burgundy-muted); color: var(--burgundy); }
+
+  /* Table */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead tr { background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .data-table th { @apply px-4 py-3 text-left font-semibold; color: var(--text-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .data-table td { @apply px-4 py-3; border-bottom: 1px solid var(--border); color: var(--text-1); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover td { background: var(--surface-2); }
 }
