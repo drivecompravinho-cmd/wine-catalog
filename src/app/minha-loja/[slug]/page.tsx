@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Search, Plus, Trash2, Check, Wine, LogOut, Save } from "lucide-react";
+import { Search, Plus, Trash2, Check, Wine, LogOut, Save, X } from "lucide-react";
 
 interface VinhoDB {
   id: string;
@@ -43,9 +43,11 @@ export default function MinhaLojaPage() {
   const [saved, setSaved] = useState<string | null>(null);
   const [showBusca, setShowBusca] = useState(false);
   const [busca, setBusca] = useState("");
+  const [filtro, setFiltro] = useState("");
   const [resultados, setResultados] = useState<VinhoDB[]>([]);
   const [buscando, setBuscando] = useState(false);
   const buscaRef = useRef<HTMLInputElement>(null);
+  const filtroRef = useRef<HTMLInputElement>(null);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -71,10 +73,9 @@ export default function MinhaLojaPage() {
     setLoading(false);
   }, [slug]);
 
-  useEffect(() => {
-    if (authed) fetchItens();
-  }, [authed, fetchItens]);
+  useEffect(() => { if (authed) fetchItens(); }, [authed, fetchItens]);
 
+  // Busca de rótulos no modal com debounce
   useEffect(() => {
     if (!busca.trim()) { setResultados([]); return; }
     const t = setTimeout(async () => {
@@ -128,95 +129,138 @@ export default function MinhaLojaPage() {
     setItens((prev) => prev.filter((i) => i.id !== id));
   }
 
-  const cor = loja?.cor_realce || "#8B1A1A";
+  const cor = loja?.cor_realce || "#6B1F3A";
+
+  // Filtra + ordena alfabeticamente
+  const itensFiltrados = itens
+    .filter((item) =>
+      !filtro.trim() ||
+      item.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+      item.produtor.toLowerCase().includes(filtro.toLowerCase()) ||
+      item.uva.toLowerCase().includes(filtro.toLowerCase())
+    )
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   if (!authed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
-        <div className="card p-8 w-full max-w-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <Wine className="w-5 h-5" style={{ color: "#8B1A1A" }} />
-            <span className="font-display text-xl font-semibold text-stone-900">Minha Loja</span>
-          </div>
-          <p className="text-stone-400 text-sm mb-6">Acesse para gerenciar seu catálogo</p>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="label">Senha de acesso</label>
-              <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
-                className="input" placeholder="••••••••" autoFocus />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--surface-2)" }}>
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#6B1F3A" }}>
+                <Wine className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-display text-xl font-semibold" style={{ color: "var(--text-1)" }}>COMPRAVINHO</span>
             </div>
-            {senhaErro && <p className="text-red-500 text-sm">{senhaErro}</p>}
-            <button type="submit" className="w-full py-2.5 rounded-lg text-white font-medium text-sm"
-              style={{ backgroundColor: "#8B1A1A" }}>
-              Entrar
-            </button>
-          </form>
+            <p className="text-sm" style={{ color: "var(--text-2)" }}>Gestão do catálogo</p>
+          </div>
+          <div className="card p-6">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="label">Senha de acesso</label>
+                <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
+                  className="input" placeholder="••••••••" autoFocus />
+              </div>
+              {senhaErro && <p className="text-xs px-3 py-2 rounded-lg" style={{ background: "#fef2f2", color: "#b91c1c" }}>{senhaErro}</p>}
+              <button type="submit" className="w-full py-2.5 rounded-xl text-white font-medium text-sm"
+                style={{ background: "#6B1F3A" }}>
+                Entrar
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-100 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+    <div className="min-h-screen" style={{ background: "var(--surface-2)" }}>
+      {/* Header */}
+      <header className="sticky top-0 z-10" style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           {loja?.logo_url ? (
-            <img src={loja.logo_url} alt={loja.nome} className="w-8 h-8 object-contain" />
+            <img src={loja.logo_url} alt={loja.nome} className="w-8 h-8 object-contain rounded-lg" />
           ) : (
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold font-display"
-              style={{ backgroundColor: cor }}>{loja?.nome[0]}</div>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: cor }}>{loja?.nome[0]}</div>
           )}
           <div className="flex-1">
-            <p className="font-display font-semibold text-stone-900 text-sm">{loja?.nome}</p>
-            <p className="text-xs text-stone-400">Gestão do catálogo</p>
+            <p className="font-semibold text-sm leading-tight" style={{ color: "var(--text-1)" }}>{loja?.nome}</p>
+            <p className="text-xs" style={{ color: "var(--text-3)" }}>Gestão do catálogo</p>
           </div>
           <a href={`/catalogo/${slug}`} target="_blank"
-            className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 hover:border-stone-400 transition-colors">
+            className="text-xs px-3 py-1.5 rounded-xl transition-colors"
+            style={{ border: "1.5px solid var(--border)", color: "var(--text-2)" }}>
             Ver catálogo
           </a>
-          <button onClick={() => setAuthed(false)} className="p-2 text-stone-400 hover:text-stone-600">
+          <button onClick={() => setAuthed(false)} className="p-2 rounded-xl transition-colors"
+            style={{ color: "var(--text-3)" }}>
             <LogOut className="w-4 h-4" />
           </button>
         </div>
-        <div className="h-0.5" style={{ backgroundColor: cor }} />
+        <div className="h-0.5" style={{ background: cor }} />
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-stone-500">{itens.length} {itens.length === 1 ? "vinho" : "vinhos"} no catálogo</p>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          {/* Busca na lista */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-3)" }} />
+            <input
+              ref={filtroRef}
+              className="input pl-9"
+              placeholder="Buscar no catálogo..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+            />
+            {filtro && (
+              <button onClick={() => setFiltro("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-3.5 h-3.5" style={{ color: "var(--text-3)" }} />
+              </button>
+            )}
+          </div>
+          <p className="text-xs shrink-0" style={{ color: "var(--text-3)" }}>
+            {itensFiltrados.length} de {itens.length} vinho{itens.length !== 1 ? "s" : ""}
+          </p>
           <button onClick={() => setShowBusca(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium"
-            style={{ backgroundColor: cor }}>
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium shrink-0"
+            style={{ background: cor }}>
             <Plus className="w-4 h-4" /> Adicionar vinho
           </button>
         </div>
 
+        {/* Modal busca de rótulos */}
         {showBusca && (
           <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4"
-            style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowBusca(false); }}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-              <div className="p-4 border-b border-stone-100">
+            style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowBusca(false); setBusca(""); } }}>
+            <div className="w-full max-w-md overflow-hidden rounded-2xl" style={{ background: "var(--surface)", boxShadow: "var(--shadow-lg)" }}>
+              <div className="p-4" style={{ borderBottom: "1px solid var(--border)" }}>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-3)" }} />
                   <input ref={buscaRef} className="input pl-9"
-                    placeholder="Digite o nome do vinho..." value={busca}
-                    onChange={(e) => setBusca(e.target.value)} />
+                    placeholder="Digite o nome do vinho..."
+                    value={busca} onChange={(e) => setBusca(e.target.value)} />
+                  {busca && (
+                    <button onClick={() => setBusca("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <X className="w-3.5 h-3.5" style={{ color: "var(--text-3)" }} />
+                    </button>
+                  )}
                 </div>
               </div>
-              <div className="max-h-72 overflow-y-auto">
-                {buscando && <p className="text-xs text-stone-400 text-center py-4">Buscando...</p>}
-                {!buscando && busca && resultados.length === 0 && (
-                  <p className="text-xs text-stone-400 text-center py-4">Nenhum rótulo encontrado.</p>
-                )}
-                {!buscando && !busca && (
-                  <p className="text-xs text-stone-400 text-center py-6">Digite para buscar rótulos...</p>
-                )}
+              <div className="max-h-80 overflow-y-auto">
+                {buscando && <p className="text-xs text-center py-5" style={{ color: "var(--text-3)" }}>Buscando...</p>}
+                {!buscando && !busca && <p className="text-xs text-center py-8" style={{ color: "var(--text-3)" }}>Digite para buscar rótulos disponíveis...</p>}
+                {!buscando && busca && resultados.length === 0 && <p className="text-xs text-center py-5" style={{ color: "var(--text-3)" }}>Nenhum rótulo encontrado para "{busca}".</p>}
                 {resultados.map((v) => (
                   <button key={v.id} onClick={() => adicionarVinho(v)}
-                    className="w-full text-left px-4 py-3 hover:bg-stone-50 border-b border-stone-50 transition-colors">
-                    <p className="text-sm font-medium text-stone-800">{v.nome}</p>
-                    <p className="text-xs text-stone-400">{[v.produtor, v.uva, v.pais].filter(Boolean).join(" · ")}</p>
+                    className="w-full text-left px-4 py-3 transition-colors"
+                    style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                    <p className="text-sm font-medium" style={{ color: "var(--text-1)" }}>{v.nome}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>{[v.produtor, v.uva, v.pais].filter(Boolean).join(" · ")}</p>
                   </button>
                 ))}
               </div>
@@ -224,36 +268,46 @@ export default function MinhaLojaPage() {
           </div>
         )}
 
+        {/* Tabela */}
         {loading ? (
-          <p className="text-stone-400 text-sm text-center py-12">Carregando...</p>
+          <div className="card p-12 text-center" style={{ color: "var(--text-3)" }}>Carregando...</div>
         ) : itens.length === 0 ? (
           <div className="card p-16 text-center">
             <span className="text-4xl mb-3 block">🍷</span>
-            <p className="text-stone-500 text-sm mb-4">Nenhum vinho no catálogo ainda.</p>
+            <p className="text-sm mb-4" style={{ color: "var(--text-2)" }}>Nenhum vinho no catálogo ainda.</p>
             <button onClick={() => setShowBusca(true)}
-              className="px-4 py-2 rounded-lg text-white text-sm font-medium"
-              style={{ backgroundColor: cor }}>
+              className="px-4 py-2 rounded-xl text-white text-sm font-medium"
+              style={{ background: cor }}>
               Adicionar primeiro vinho
             </button>
+          </div>
+        ) : itensFiltrados.length === 0 ? (
+          <div className="card p-12 text-center">
+            <p className="text-sm" style={{ color: "var(--text-3)" }}>Nenhum vinho encontrado para "{filtro}".</p>
+            <button onClick={() => setFiltro("")} className="text-xs mt-2 underline" style={{ color: "var(--text-2)" }}>Limpar busca</button>
           </div>
         ) : (
           <div className="card overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-stone-100 bg-stone-50">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-stone-500 uppercase tracking-wide">Rótulo</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-stone-500 uppercase tracking-wide w-32">Preço</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-stone-500 uppercase tracking-wide w-24">Estoque</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-stone-500 uppercase tracking-wide w-20">Ativo</th>
-                  <th className="w-20" />
+                <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-2)" }}>Rótulo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-32" style={{ color: "var(--text-2)" }}>Preço</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-24" style={{ color: "var(--text-2)" }}>Estoque</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider w-20" style={{ color: "var(--text-2)" }}>Ativo</th>
+                  <th className="w-24" />
                 </tr>
               </thead>
               <tbody>
-                {itens.map((item) => (
-                  <tr key={item.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
+                {itensFiltrados.map((item) => (
+                  <tr key={item.id} style={{ borderBottom: "1px solid var(--border)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-2)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-stone-800">{item.nome}</p>
-                      <p className="text-xs text-stone-400">{[item.produtor, item.uva, item.pais].filter(Boolean).join(" · ")}</p>
+                      <p className="font-medium" style={{ color: "var(--text-1)" }}>{item.nome}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>
+                        {[item.produtor, item.uva, item.pais].filter(Boolean).join(" · ")}
+                      </p>
                     </td>
                     <td className="px-4 py-3">
                       <input className="input py-1.5 text-sm w-28" value={item.preco}
@@ -271,20 +325,24 @@ export default function MinhaLojaPage() {
                       <button
                         onClick={() => { const novo = { ...item, ativo: !item.ativo, dirty: true }; updateItem(item.id, "ativo", !item.ativo); setTimeout(() => saveItem(novo), 50); }}
                         className="w-10 h-6 rounded-full transition-colors relative inline-block"
-                        style={{ backgroundColor: item.ativo ? cor : "#d6d3d1" }}>
+                        style={{ background: item.ativo ? cor : "var(--border)" }}>
                         <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${item.ativo ? "left-[18px]" : "left-0.5"}`} />
                       </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end">
-                        {saving === item.id && <span className="text-xs text-stone-400">Salvando...</span>}
-                        {saved === item.id && <Check className="w-3.5 h-3.5 text-green-500" />}
+                        {saving === item.id && <span className="text-xs" style={{ color: "var(--text-3)" }}>Salvando...</span>}
+                        {saved === item.id && <Check className="w-3.5 h-3.5" style={{ color: "#1a7a4a" }} />}
                         {item.dirty && saving !== item.id && (
-                          <button onClick={() => saveItem(item)} className="p-1.5 text-stone-400 hover:text-stone-700">
+                          <button onClick={() => saveItem(item)} className="p-1.5 rounded-lg transition-colors"
+                            style={{ color: "var(--text-3)" }}>
                             <Save className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        <button onClick={() => removeItem(item.id)} className="p-1.5 text-stone-300 hover:text-red-500 transition-colors">
+                        <button onClick={() => removeItem(item.id)} className="p-1.5 rounded-lg transition-colors"
+                          style={{ color: "var(--text-3)" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "#dc2626")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-3)")}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
