@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 
+interface VinhoJoin {
+  nome: string;
+  produtor: string;
+  uva: string;
+  pais: string;
+}
+
 export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = createServiceClient();
@@ -15,7 +22,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
     .order("created_at", { ascending: true });
 
   const itens = (data ?? []).map((i) => {
-    const v = i.vinhos as { nome: string; produtor: string; uva: string; pais: string } | null;
+    const v = (Array.isArray(i.vinhos) ? i.vinhos[0] : i.vinhos) as VinhoJoin | null;
     return {
       id: i.id,
       vinho_id: i.vinho_id,
