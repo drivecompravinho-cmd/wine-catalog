@@ -27,6 +27,8 @@ export default function VinhosPage() {
   const [csvError, setCsvError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [deletando, setDeletando] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{updated: number; not_found: string[]; message: string} | null>(null);
 
   const fetchVinhos = useCallback(async () => {
     const res = await fetch("/api/admin/vinhos");
@@ -119,6 +121,16 @@ export default function VinhosPage() {
     const a = document.createElement("a"); a.href = url; a.download = "template-vinhos.csv"; a.click();
   }
 
+  async function handleSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    const res = await fetch("/api/admin/sync-imagens", { method: "POST" });
+    const data = await res.json();
+    setSyncResult(data);
+    setSyncing(false);
+    fetchVinhos();
+  }
+
   const filtered = vinhos.filter((v) =>
     v.nome.toLowerCase().includes(search.toLowerCase()) ||
     v.produtor.toLowerCase().includes(search.toLowerCase())
@@ -135,6 +147,10 @@ export default function VinhosPage() {
           <button onClick={downloadTemplate} className="btn-outline flex items-center gap-2 text-xs">
             <Download className="w-3.5 h-3.5" /> Template CSV
           </button>
+          <button onClick={handleSync} disabled={syncing}
+            className="btn-outline flex items-center gap-2 text-xs">
+            {syncing ? "Sincronizando..." : <><span>🔄</span> Sync imagens Drive</>}
+          </button>
           <label className="btn-outline flex items-center gap-2 text-xs cursor-pointer">
             <Upload className="w-3.5 h-3.5" /> Importar CSV
             <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSV} />
@@ -148,7 +164,15 @@ export default function VinhosPage() {
           <p className="text-sm font-medium text-stone-700">Adicionar rótulos</p>
           <p className="text-xs text-stone-400">Preencha e clique em Salvar — pode adicionar várias linhas</p>
         </div>
-        {csvError && <p className="text-red-500 text-xs px-4 py-2">{csvError}</p>}
+        {syncResult && (
+        <div className={`px-4 py-2 text-xs ${syncResult.updated > 0 ? "text-green-700 bg-green-50" : "text-stone-500 bg-stone-50"}`}>
+          ✓ {syncResult.message}
+          {syncResult.not_found?.length > 0 && (
+            <span className="text-amber-600 ml-2">· Não encontrados: {syncResult.not_found.slice(0,3).join(", ")}{syncResult.not_found.length > 3 ? `... +${syncResult.not_found.length - 3}` : ""}</span>
+          )}
+        </div>
+      )}
+      {csvError && <p className="text-red-500 text-xs px-4 py-2">{csvError}</p>}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
