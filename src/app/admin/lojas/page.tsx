@@ -15,7 +15,7 @@ export default function LojasPage() {
   const [showForm, setShowForm] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [form, setForm] = useState({
-    nome: "", slug: "", sheet_id: "", logo_url: "", cor_realce: "#8B1A1A",
+    nome: "", slug: "", sheet_id: "", logo_url: "", cor_realce: "#8B1A1A", senha_cliente: "",
   });
 
   const fetchLojas = useCallback(async () => {
@@ -34,7 +34,7 @@ export default function LojasPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, ativo: true }),
     });
-    setForm({ nome: "", slug: "", sheet_id: "", logo_url: "", cor_realce: "#8B1A1A" });
+    setForm({ nome: "", slug: "", sheet_id: "", logo_url: "", cor_realce: "#8B1A1A", senha_cliente: "" });
     setShowForm(false);
     fetchLojas();
   }
@@ -113,6 +113,15 @@ export default function LojasPage() {
               </p>
             </div>
 
+            <div>
+              <label className="label">Senha do cliente</label>
+              <input
+                className="input" required value={form.senha_cliente}
+                onChange={(e) => setForm({ ...form, senha_cliente: e.target.value })}
+                placeholder="Ex: vinoteca2025"
+              />
+              <p className="text-xs text-stone-400 mt-1">O cliente usa essa senha para acessar /minha-loja/{form.slug || "..."}</p>
+            </div>
             <div>
               <label className="label">URL do logo</label>
               <input
