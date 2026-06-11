@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="hidden lg:flex flex-col justify-between w-1/2 p-12"
           style={{ background: "linear-gradient(135deg, #1A0A2E 0%, #3B0764 60%, #6B21A8 100%)" }}>
           <div className="relative h-12 w-64">
-            <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain object-left" />
+            <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
           </div>
           <div>
             <p className="text-white/90 text-2xl font-display font-semibold leading-snug mb-3">
@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Mobile logo */}
             <div className="lg:hidden mb-8 flex justify-center">
               <div className="relative h-10 w-48">
-                <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain" />
+                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" />
               </div>
             </div>
 
@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-60 shrink-0 flex flex-col" style={{ background: "var(--surface)", borderRight: "1px solid var(--border)" }}>
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <div className="relative h-8 w-40">
-            <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain object-left" />
+            <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
           </div>
           <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Admin</p>
         </div>
