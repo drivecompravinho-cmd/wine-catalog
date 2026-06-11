@@ -103,7 +103,7 @@ export default function MinhaLojaPage() {
         <div className="hidden lg:flex flex-col justify-between w-5/12 p-12"
           style={{ background: "linear-gradient(135deg, #1A0A2E 0%, #3B0764 60%, #6B21A8 100%)" }}>
           <div className="relative h-12 w-64">
-            <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain object-left" />
+            <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
           </div>
           <div>
             <p className="text-white/90 text-xl font-display font-semibold leading-snug mb-2">
@@ -119,7 +119,7 @@ export default function MinhaLojaPage() {
           <div className="w-full max-w-sm">
             <div className="lg:hidden mb-8 flex justify-center">
               <div className="relative h-10 w-48">
-                <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain" />
+                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" />
               </div>
             </div>
             <div className="mb-8">
@@ -160,7 +160,7 @@ export default function MinhaLojaPage() {
             <img src={loja.logo_url} alt={loja.nome} className="w-8 h-8 object-contain rounded-lg" />
           ) : (
             <div className="relative h-7 w-36">
-              <Image src="/logo-compravinho.png" alt="COMPRAVINHO" fill className="object-contain object-left" />
+              <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
             </div>
           )}
           <div className="flex-1">
