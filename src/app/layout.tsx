@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "COMPRAVINHO",
   description: "Catálogo online de vinhos",
+  icons: {
+    icon: "/logo-icone.png",
+    apple: "/logo-icone.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
