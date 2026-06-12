@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, ExternalLink, Trash2, Copy, Check, Pencil, X } from "lucide-react";
 import type { Loja } from "@/types";
 
-const CORES = ["#6B1F3A","#1A3A5C","#2D5A27","#8B6914","#5B2D8E","#1E6B5A","#8B1A1A","#C0392B","#16537e","#784212"];
+const CORES = ["#6B21A8","#1A3A5C","#2D5A27","#8B6914","#5B2D8E","#1E6B5A","#8B1A1A","#C0392B","#16537e","#784212"];
 
-const formVazio = () => ({ nome: "", slug: "", logo_url: "", cor_realce: "#6B1F3A", senha_cliente: "", dominio_customizado: "" });
+const formVazio = () => ({ nome: "", slug: "", logo_url: "", cor_realce: "#6B21A8", senha_cliente: "", whatsapp: "", dominio_customizado: "" });
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -37,8 +37,9 @@ function LojaForm({ initial, onSave, onCancel }: {
     nome: initial?.nome ?? "",
     slug: initial?.slug ?? "",
     logo_url: initial?.logo_url ?? "",
-    cor_realce: initial?.cor_realce ?? "#6B1F3A",
+    cor_realce: initial?.cor_realce ?? "#6B21A8",
     senha_cliente: initial?.senha_cliente ?? "",
+    whatsapp: initial?.whatsapp ?? "",
     dominio_customizado: initial?.dominio_customizado ?? "",
   });
 
@@ -72,6 +73,13 @@ function LojaForm({ initial, onSave, onCancel }: {
             onChange={(e) => setForm({ ...form, senha_cliente: e.target.value })}
             placeholder="senha123" />
           <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>/minha-loja/{form.slug || "..."}</p>
+        </div>
+        <div>
+          <label className="label">WhatsApp para pedidos</label>
+          <input className="input" value={form.whatsapp}
+            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+            placeholder="5511999999999" />
+          <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Com código do país, sem espaços ou símbolos</p>
         </div>
         <div>
           <label className="label">Domínio customizado <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
@@ -180,19 +188,19 @@ export default function LojasPage() {
               {editingId === loja.id ? (
                 <LojaForm initial={loja} onSave={(data) => handleEdit(loja.id, data)} onCancel={() => setEditingId(null)} />
               ) : (
-                <div className="card p-4 flex items-center gap-4" style={{ borderLeft: `4px solid ${loja.cor_realce || "#6B1F3A"}` }}>
+                <div className="card p-4 flex items-center gap-4" style={{ borderLeft: `4px solid ${loja.cor_realce || "#6B21A8"}` }}>
                   {loja.logo_url ? (
                     <img src={loja.logo_url} alt={loja.nome} className="w-10 h-10 rounded-xl object-contain" style={{ background: "var(--surface-2)" }} />
                   ) : (
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold text-sm"
-                      style={{ background: loja.cor_realce || "#6B1F3A" }}>
+                      style={{ background: loja.cor_realce || "#6B21A8" }}>
                       {loja.nome[0]}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <a href={getCatalogoUrl(loja)} target="_blank"
                       className="font-semibold text-sm hover:underline"
-                      style={{ color: loja.cor_realce || "#6B1F3A" }}>
+                      style={{ color: loja.cor_realce || "#6B21A8" }}>
                       {loja.nome}
                     </a>
                     <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-3)" }}>
