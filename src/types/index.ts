@@ -17,6 +17,7 @@ export interface Loja {
   cor_realce: string;
   sheet_id: string;
   senha_cliente: string;
+  whatsapp: string | null;
   dominio_customizado: string | null;
   ativo: boolean;
   created_at: string;
