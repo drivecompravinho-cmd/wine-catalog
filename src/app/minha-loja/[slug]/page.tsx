@@ -6,7 +6,7 @@ import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock } from "lucide-react
 import Image from "next/image";
 
 interface VinhoDB { id: string; nome: string; produtor: string; uva: string; pais: string; }
-interface ItemLinha { id: string; vinho_id: string; nome: string; produtor: string; uva: string; pais: string; preco: string; estoque: number; ativo: boolean; dirty: boolean; }
+interface ItemLinha { id: string; vinho_id: string; nome: string; produtor: string; uva: string; pais: string; preco: string; preco_oferta: string; estoque: number; ativo: boolean; dirty: boolean; }
 interface LojaInfo { nome: string; logo_url: string | null; cor_realce: string; }
 
 export default function MinhaLojaPage() {
@@ -64,10 +64,10 @@ export default function MinhaLojaPage() {
   async function adicionarVinho(vinho: VinhoDB) {
     const res = await fetch(`/api/minha-loja/${slug}/itens`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ vinho_id: vinho.id, preco: "", estoque: 0, ativo: true }),
+      body: JSON.stringify({ vinho_id: vinho.id, preco: "", preco_oferta: "", estoque: 0, ativo: true }),
     });
     const novo = await res.json();
-    setItens((prev) => [...prev, { ...vinho, id: novo.id, vinho_id: vinho.id, preco: "", estoque: 0, ativo: true, dirty: false }]);
+    setItens((prev) => [...prev, { ...vinho, id: novo.id, vinho_id: vinho.id, preco: "", preco_oferta: "", estoque: 0, ativo: true, dirty: false }]);
     setBusca(""); setResultados([]); setShowBusca(false);
   }
 
@@ -79,7 +79,7 @@ export default function MinhaLojaPage() {
     setSaving(item.id);
     await fetch(`/api/minha-loja/${slug}/itens/${item.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ preco: item.preco, estoque: item.estoque, ativo: item.ativo }),
+      body: JSON.stringify({ preco: item.preco, preco_oferta: item.preco_oferta || null, estoque: item.estoque, ativo: item.ativo }),
     });
     setItens((prev) => prev.map((i) => i.id === item.id ? { ...i, dirty: false } : i));
     setSaving(null); setSaved(item.id); setTimeout(() => setSaved(null), 2000);
@@ -235,7 +235,8 @@ export default function MinhaLojaPage() {
               <thead>
                 <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-2)" }}>Rótulo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-32" style={{ color: "var(--text-2)" }}>Preço</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-28" style={{ color: "var(--text-2)" }}>Preço</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-28" style={{ color: "var(--text-2)" }}>Oferta</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-24" style={{ color: "var(--text-2)" }}>Estoque</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider w-20" style={{ color: "var(--text-2)" }}>Ativo</th>
                   <th className="w-24" />
@@ -249,9 +250,15 @@ export default function MinhaLojaPage() {
                       <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>{[item.produtor, item.uva, item.pais].filter(Boolean).join(" · ")}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <input className="input py-1.5 text-sm w-28" value={item.preco}
+                      <input className="input py-1.5 text-sm w-24" value={item.preco}
                         onChange={(e) => updateItem(item.id, "preco", e.target.value)}
                         onBlur={() => item.dirty && saveItem(item)} placeholder="0,00" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input className="input py-1.5 text-sm w-24" value={item.preco_oferta || ""}
+                        onChange={(e) => updateItem(item.id, "preco_oferta", e.target.value)}
+                        onBlur={() => item.dirty && saveItem(item)} placeholder="—"
+                        style={item.preco_oferta ? { borderColor: cor, background: cor + "08" } : {}} />
                     </td>
                     <td className="px-4 py-3">
                       <input type="number" min={0} className="input py-1.5 text-sm w-20" value={item.estoque}
