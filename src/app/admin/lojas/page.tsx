@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, ExternalLink, Trash2, Copy, Check, Pencil, X } from "lucide-react";
+import { Plus, ExternalLink, Trash2, Copy, Check, Pencil, X, Wine, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 import type { Loja } from "@/types";
 
 const CORES = ["#6B21A8","#1A3A5C","#2D5A27","#8B6914","#5B2D8E","#1E6B5A","#8B1A1A","#C0392B","#16537e","#784212"];
@@ -48,9 +48,7 @@ function LojaForm({ initial, onSave, onCancel }: {
   return (
     <div className="card p-6 mb-5">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="font-semibold text-base" style={{ color: "var(--text-1)" }}>
-          {isEdit ? "Editar vinoteca" : "Nova vinoteca"}
-        </h3>
+        <h3 className="font-semibold text-base" style={{ color: "var(--text-1)" }}>{isEdit ? "Editar vinoteca" : "Nova vinoteca"}</h3>
         <button onClick={onCancel} className="btn-ghost p-2"><X className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -62,36 +60,26 @@ function LojaForm({ initial, onSave, onCancel }: {
         </div>
         <div>
           <label className="label">Slug</label>
-          <input className="input" required value={form.slug}
-            onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
-            placeholder="vinoteca-paulista" />
+          <input className="input" required value={form.slug} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} placeholder="vinoteca-paulista" />
           <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>/catalogo/{form.slug || "..."}</p>
         </div>
         <div>
           <label className="label">Senha do cliente</label>
-          <input className="input" required value={form.senha_cliente}
-            onChange={(e) => setForm({ ...form, senha_cliente: e.target.value })}
-            placeholder="senha123" />
+          <input className="input" required value={form.senha_cliente} onChange={(e) => setForm({ ...form, senha_cliente: e.target.value })} placeholder="senha123" />
           <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>/minha-loja/{form.slug || "..."}</p>
         </div>
         <div>
           <label className="label">WhatsApp para pedidos</label>
-          <input className="input" value={form.whatsapp}
-            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-            placeholder="5511999999999" />
-          <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Com código do país, sem espaços ou símbolos</p>
+          <input className="input" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="5511999999999" />
+          <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Código do país + número, sem símbolos</p>
         </div>
         <div>
           <label className="label">Domínio customizado <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
-          <input className="input" value={form.dominio_customizado}
-            onChange={(e) => setForm({ ...form, dominio_customizado: e.target.value })}
-            placeholder="catalogo.vinoteca.com.br" />
+          <input className="input" value={form.dominio_customizado} onChange={(e) => setForm({ ...form, dominio_customizado: e.target.value })} placeholder="catalogo.vinoteca.com.br" />
         </div>
-        <div className="col-span-2">
+        <div>
           <label className="label">URL do logo <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
-          <input className="input" value={form.logo_url}
-            onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-            placeholder="https://..." />
+          <input className="input" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
         </div>
         <div className="col-span-2">
           <label className="label">Cor de realce</label>
@@ -105,9 +93,7 @@ function LojaForm({ initial, onSave, onCancel }: {
       </div>
       <div className="flex justify-end gap-3 mt-5 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
         <button type="button" onClick={onCancel} className="btn-outline">Cancelar</button>
-        <button onClick={() => onSave({ ...form, ativo: true, sheet_id: "" })} className="btn-primary">
-          {isEdit ? "Salvar alterações" : "Criar vinoteca"}
-        </button>
+        <button onClick={() => onSave({ ...form, ativo: true, sheet_id: "" })} className="btn-primary">{isEdit ? "Salvar alterações" : "Criar vinoteca"}</button>
       </div>
     </div>
   );
@@ -119,6 +105,7 @@ export default function LojasPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showSenha, setShowSenha] = useState<Record<string, boolean>>({});
 
   const fetchLojas = useCallback(async () => {
     const res = await fetch("/api/admin/lojas");
@@ -151,10 +138,10 @@ export default function LojasPage() {
     fetchLojas();
   }
 
-  function copyLink(slug: string) {
-    navigator.clipboard.writeText(`${window.location.origin}/catalogo/${slug}`);
-    setCopied(slug);
-    setTimeout(() => setCopied(null), 2000);
+  function copyText(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 1500);
   }
 
   function getCatalogoUrl(loja: Loja) {
@@ -163,24 +150,18 @@ export default function LojasPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm" style={{ color: "var(--text-2)" }}>{lojas.length} vinoteca{lojas.length !== 1 ? "s" : ""} cadastrada{lojas.length !== 1 ? "s" : ""}</p>
-        <button onClick={() => { setShowForm(true); setEditingId(null); }} className="btn-primary">
-          <Plus className="w-4 h-4" /> Nova vinoteca
-        </button>
+        <button onClick={() => { setShowForm(true); setEditingId(null); }} className="btn-primary"><Plus className="w-4 h-4" /> Nova vinoteca</button>
       </div>
 
-      {showForm && !editingId && (
-        <LojaForm onSave={handleCreate} onCancel={() => setShowForm(false)} />
-      )}
+      {showForm && !editingId && <LojaForm onSave={handleCreate} onCancel={() => setShowForm(false)} />}
 
       {loading ? (
         <div className="card p-12 text-center" style={{ color: "var(--text-3)" }}>Carregando...</div>
       ) : lojas.length === 0 ? (
-        <div className="card p-16 text-center">
-          <p className="text-sm" style={{ color: "var(--text-3)" }}>Nenhuma vinoteca cadastrada ainda.</p>
-        </div>
+        <div className="card p-16 text-center"><p className="text-sm" style={{ color: "var(--text-3)" }}>Nenhuma vinoteca cadastrada ainda.</p></div>
       ) : (
         <div className="space-y-3">
           {lojas.map((loja) => (
@@ -188,41 +169,63 @@ export default function LojasPage() {
               {editingId === loja.id ? (
                 <LojaForm initial={loja} onSave={(data) => handleEdit(loja.id, data)} onCancel={() => setEditingId(null)} />
               ) : (
-                <div className="card p-4 flex items-center gap-4" style={{ borderLeft: `4px solid ${loja.cor_realce || "#6B21A8"}` }}>
-                  {loja.logo_url ? (
-                    <img src={loja.logo_url} alt={loja.nome} className="w-10 h-10 rounded-xl object-contain" style={{ background: "var(--surface-2)" }} />
-                  ) : (
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-semibold text-sm"
-                      style={{ background: loja.cor_realce || "#6B21A8" }}>
-                      {loja.nome[0]}
+                <div className="card overflow-hidden" style={{ borderLeft: `4px solid ${loja.cor_realce || "#6B21A8"}` }}>
+                  {/* Top row */}
+                  <div className="p-4 flex items-center gap-4">
+                    {loja.logo_url ? (
+                      <img src={loja.logo_url} alt={loja.nome} className="w-11 h-11 rounded-xl object-contain" style={{ background: "var(--surface-2)" }} />
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-base" style={{ background: loja.cor_realce || "#6B21A8" }}>
+                        {loja.nome[0]}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: "var(--text-1)" }}>{loja.nome}</p>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-3)" }}>{loja.dominio_customizado || `/catalogo/${loja.slug}`}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <a href={getCatalogoUrl(loja)} target="_blank"
-                      className="font-semibold text-sm hover:underline"
-                      style={{ color: loja.cor_realce || "#6B21A8" }}>
-                      {loja.nome}
-                    </a>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-3)" }}>
-                      {loja.dominio_customizado || `/catalogo/${loja.slug}`}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => handleToggle(loja)} className={`badge ${loja.ativo ? "badge-green" : "badge-gray"} cursor-pointer`}>
+                        {loja.ativo ? "Ativo" : "Inativo"}
+                      </button>
+                      <button onClick={() => { setEditingId(loja.id); setShowForm(false); }} className="btn-ghost p-2"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(loja.id)} className="btn-ghost p-2" style={{ color: "var(--text-3)" }}><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => handleToggle(loja)}
-                      className={`badge ${loja.ativo ? "badge-green" : "badge-gray"} cursor-pointer`}>
-                      {loja.ativo ? "Ativo" : "Inativo"}
-                    </button>
-                    <button onClick={() => copyLink(loja.slug)} className="btn-ghost p-2">
-                      {copied === loja.slug ? <Check className="w-4 h-4" style={{ color: "#1a7a4a" }} /> : <Copy className="w-4 h-4" />}
-                    </button>
-                    <a href={getCatalogoUrl(loja)} target="_blank" className="btn-ghost p-2">
-                      <ExternalLink className="w-4 h-4" />
+
+                  {/* Summary bar */}
+                  <div className="px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2" style={{ background: "var(--surface-2)", borderTop: "1px solid var(--border)" }}>
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-2)" }}>
+                      <Wine className="w-3.5 h-3.5" style={{ color: loja.cor_realce || "#6B21A8" }} />
+                      <span className="font-semibold" style={{ color: "var(--text-1)" }}>{loja.total_vinhos ?? 0}</span> vinhos no catálogo
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-2)" }}>
+                      <span>Login:</span>
+                      <code className="px-1.5 py-0.5 rounded font-mono text-[11px]" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>{loja.slug}</code>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-2)" }}>
+                      <span>Senha:</span>
+                      <code className="px-1.5 py-0.5 rounded font-mono text-[11px]" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                        {showSenha[loja.id] ? loja.senha_cliente : "••••••••"}
+                      </code>
+                      <button onClick={() => setShowSenha((p) => ({ ...p, [loja.id]: !p[loja.id] }))} className="btn-ghost p-1">
+                        {showSenha[loja.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      </button>
+                      <button onClick={() => copyText(loja.senha_cliente, `senha-${loja.id}`)} className="btn-ghost p-1">
+                        {copied === `senha-${loja.id}` ? <Check className="w-3 h-3" style={{ color: "#1a7a4a" }} /> : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Actions row */}
+                  <div className="px-4 py-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid var(--border)" }}>
+                    <a href={getCatalogoUrl(loja)} target="_blank" className="btn-outline text-xs py-1.5">
+                      <ExternalLink className="w-3.5 h-3.5" /> Ver catálogo
                     </a>
-                    <button onClick={() => { setEditingId(loja.id); setShowForm(false); }} className="btn-ghost p-2">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(loja.id)} className="btn-ghost p-2" style={{ color: "var(--text-3)" }}>
-                      <Trash2 className="w-4 h-4" />
+                    <a href={`/minha-loja/${loja.slug}`} target="_blank" className="btn-outline text-xs py-1.5">
+                      <LayoutDashboard className="w-3.5 h-3.5" /> Painel do cliente
+                    </a>
+                    <button onClick={() => copyText(`${window.location.origin}/catalogo/${loja.slug}`, `link-${loja.id}`)} className="btn-ghost text-xs py-1.5">
+                      {copied === `link-${loja.id}` ? <><Check className="w-3.5 h-3.5" style={{ color: "#1a7a4a" }} /> Copiado!</> : <><Copy className="w-3.5 h-3.5" /> Copiar link do catálogo</>}
                     </button>
                   </div>
                 </div>
