@@ -17,7 +17,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
 
   const { data: loja, error: lojaError } = await supabase
     .from("lojas")
-    .select("id, nome, logo_url, cor_realce, slug, whatsapp")
+    .select("id, nome, logo_url, cor_realce, slug, whatsapp, instagram, facebook, endereco_url, descricao")
     .eq("slug", slug)
     .eq("ativo", true)
     .single();
@@ -61,6 +61,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
       slug: loja.slug,
       cor_realce: loja.cor_realce || "#6B21A8",
       whatsapp: loja.whatsapp || null,
+      instagram: loja.instagram || null,
+      facebook: loja.facebook || null,
+      endereco_url: loja.endereco_url || null,
+      descricao: loja.descricao || null,
     },
     itens,
   });
