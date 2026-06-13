@@ -28,7 +28,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
 
   const { data: rows, error: itemsError } = await supabase
     .from("catalogo_itens")
-    .select("id, preco, estoque, ativo, vinhos(nome, produtor, uva, pais, regiao, imagem_url)")
+    .select("id, preco, preco_oferta, estoque, ativo, vinhos(nome, produtor, uva, pais, regiao, imagem_url)")
     .eq("loja_id", loja.id)
     .eq("ativo", true)
     .gt("estoque", 0)
@@ -43,6 +43,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: 
     return {
       nome: v?.nome ?? "",
       preco: i.preco,
+      preco_oferta: i.preco_oferta ?? null,
       estoque: i.estoque,
       ativo: i.ativo,
       produtor: v?.produtor ?? "",
