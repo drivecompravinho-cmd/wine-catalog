@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock, Tag } from "lucide-react";
+import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock, Tag, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 interface VinhoDB { id: string; nome: string; produtor: string; uva: string; pais: string; }
@@ -14,6 +14,7 @@ export default function MinhaLojaPage() {
   const [authed, setAuthed] = useState(false);
   const [senha, setSenha] = useState("");
   const [senhaErro, setSenhaErro] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [loja, setLoja] = useState<LojaInfo | null>(null);
   const [itens, setItens] = useState<ItemLinha[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,12 +30,14 @@ export default function MinhaLojaPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
+    setSenhaErro("");
     const res = await fetch(`/api/minha-loja/${slug}/auth`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ senha }),
     });
     if (res.ok) { const data = await res.json(); setLoja(data.loja); setAuthed(true); }
-    else setSenhaErro("Senha incorreta. Tente novamente.");
+    else { setSenhaErro("Senha incorreta."); setSubmitting(false); }
   }
 
   const fetchItens = useCallback(async () => {
@@ -99,55 +102,53 @@ export default function MinhaLojaPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen flex" style={{ background: "var(--surface-2)" }}>
-        {/* Left panel */}
-        <div className="hidden lg:flex flex-col justify-between w-5/12 p-12"
-          style={{ background: "linear-gradient(135deg, #1A0A2E 0%, #3B0764 60%, #6B21A8 100%)" }}>
-          <div className="relative h-12 w-64">
-            <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
-          </div>
-          <div>
-            <p className="text-white/90 text-xl font-display font-semibold leading-snug mb-2">
-              Seu catálogo online,<br />sempre atualizado.
-            </p>
-            <p className="text-white/50 text-sm">Gerencie preços, estoque e disponibilidade em tempo real.</p>
-          </div>
-          <p className="text-white/30 text-xs">© {new Date().getFullYear()} compravinho.com</p>
-        </div>
+      <div className="min-h-screen relative flex items-center justify-center overflow-hidden" style={{ background: "#0A0612" }}>
+        {/* Ambient gradient orbs - colored by store brand */}
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl opacity-40" style={{ background: `radial-gradient(circle, #6B21A8, transparent 70%)` }} />
+        <div className="absolute -bottom-40 -right-20 w-[450px] h-[450px] rounded-full blur-3xl opacity-30" style={{ background: `radial-gradient(circle, #A855F7, transparent 70%)` }} />
+        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full blur-3xl opacity-20" style={{ background: `radial-gradient(circle, #C084FC, transparent 70%)` }} />
 
-        {/* Right panel */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-sm">
-            <div className="lg:hidden mb-8 flex justify-center">
-              <div className="relative h-10 w-48">
-                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" />
+        <div className="relative z-10 w-full max-w-[380px] mx-4">
+          <div className="rounded-3xl p-8" style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+          }}>
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative h-9 w-44 mb-1">
+                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" style={{ filter: "brightness(0) invert(1)" }} />
               </div>
+              <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.4)" }}>Gestão do catálogo</p>
             </div>
-            <div className="mb-8">
-              <h1 className="text-2xl font-semibold mb-1" style={{ color: "var(--text-1)" }}>Meu catálogo</h1>
-              <p className="text-sm" style={{ color: "var(--text-2)" }}>Entre para gerenciar seus vinhos</p>
-            </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="label">Senha de acesso</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-3)" }} />
-                  <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)}
-                    className="input pl-9" placeholder="••••••••" autoFocus />
-                </div>
+
+            <form onSubmit={handleLogin} className="space-y-3">
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.35)" }} />
+                <input
+                  type="password" value={senha}
+                  onChange={(e) => { setSenha(e.target.value); setSenhaErro(""); }}
+                  className="w-full pl-11 pr-12 py-3.5 rounded-2xl text-sm outline-none transition-all"
+                  placeholder="Senha de acesso"
+                  autoFocus
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: senhaErro ? "1px solid rgba(220,38,38,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                  }}
+                  onFocus={(e) => { e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.borderColor = "rgba(168,85,247,0.5)"; }}
+                  onBlur={(e) => { e.target.style.background = "rgba(255,255,255,0.05)"; e.target.style.borderColor = senhaErro ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.1)"; }}
+                />
+                <button type="submit" disabled={submitting}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                  style={{ background: "linear-gradient(135deg, #A855F7, #6B21A8)" }}>
+                  <ArrowRight className="w-4 h-4 text-white" />
+                </button>
               </div>
-              {senhaErro && (
-                <div className="text-xs px-3 py-2.5 rounded-xl flex items-center gap-2"
-                  style={{ background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca" }}>
-                  <span>⚠</span> {senhaErro}
-                </div>
-              )}
-              <button type="submit" className="w-full py-3 rounded-xl text-white font-medium text-sm"
-                style={{ background: "var(--brand)" }}>
-                Entrar
-              </button>
+              {senhaErro && <p className="text-xs text-center" style={{ color: "#f87171" }}>{senhaErro}</p>}
             </form>
           </div>
+          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.25)" }}>compravinho.com</p>
         </div>
       </div>
     );
