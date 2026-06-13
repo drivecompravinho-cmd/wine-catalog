@@ -6,7 +6,7 @@ import type { Loja } from "@/types";
 
 const CORES = ["#6B21A8","#1A3A5C","#2D5A27","#8B6914","#5B2D8E","#1E6B5A","#8B1A1A","#C0392B","#16537e","#784212"];
 
-const formVazio = () => ({ nome: "", slug: "", logo_url: "", cor_realce: "#6B21A8", senha_cliente: "", whatsapp: "", dominio_customizado: "" });
+const formVazio = () => ({ nome: "", slug: "", logo_url: "", cor_realce: "#6B21A8", senha_cliente: "", whatsapp: "", instagram: "", facebook: "", endereco_url: "", descricao: "", dominio_customizado: "" });
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -40,6 +40,10 @@ function LojaForm({ initial, onSave, onCancel }: {
     cor_realce: initial?.cor_realce ?? "#6B21A8",
     senha_cliente: initial?.senha_cliente ?? "",
     whatsapp: initial?.whatsapp ?? "",
+    instagram: initial?.instagram ?? "",
+    facebook: initial?.facebook ?? "",
+    endereco_url: initial?.endereco_url ?? "",
+    descricao: initial?.descricao ?? "",
     dominio_customizado: initial?.dominio_customizado ?? "",
   });
 
@@ -72,6 +76,22 @@ function LojaForm({ initial, onSave, onCancel }: {
           <label className="label">WhatsApp para pedidos</label>
           <input className="input" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="5511999999999" />
           <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>Código do país + número, sem símbolos</p>
+        </div>
+        <div>
+          <label className="label">Instagram <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
+          <input className="input" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} placeholder="https://instagram.com/..." />
+        </div>
+        <div>
+          <label className="label">Facebook <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
+          <input className="input" value={form.facebook} onChange={(e) => setForm({ ...form, facebook: e.target.value })} placeholder="https://facebook.com/..." />
+        </div>
+        <div className="col-span-2">
+          <label className="label">Link de localização <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
+          <input className="input" value={form.endereco_url} onChange={(e) => setForm({ ...form, endereco_url: e.target.value })} placeholder="https://maps.google.com/..." />
+        </div>
+        <div className="col-span-2">
+          <label className="label">Descrição curta <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
+          <input className="input" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Vinhos selecionados para você · Entrega rápida" maxLength={100} />
         </div>
         <div>
           <label className="label">Domínio customizado <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(opcional)</span></label>
