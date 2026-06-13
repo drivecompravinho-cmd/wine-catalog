@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Store, Lock, LogOut, ChevronRight, Wine } from "lucide-react";
+import { Store, Lock, LogOut, ChevronRight, Wine, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 const ADMIN_KEY = "wine_admin_auth";
@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
+    setError("");
     const res = await fetch("/api/admin/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,7 +35,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       sessionStorage.setItem(ADMIN_KEY, "1");
       setAuthenticated(true);
     } else {
-      setError("Senha incorreta. Tente novamente.");
+      setError("Senha incorreta.");
+      setSubmitting(false);
     }
   }
 
@@ -40,57 +44,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex" style={{ background: "var(--surface-2)" }}>
-        {/* Left panel */}
-        <div className="hidden lg:flex flex-col justify-between w-1/2 p-12"
-          style={{ background: "linear-gradient(135deg, #1A0A2E 0%, #3B0764 60%, #6B21A8 100%)" }}>
-          <div className="relative h-12 w-64">
-            <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain object-left" />
-          </div>
-          <div>
-            <p className="text-white/90 text-2xl font-display font-semibold leading-snug mb-3">
-              Gerencie seus catálogos<br />de vinho com facilidade.
-            </p>
-            <p className="text-white/50 text-sm">Plataforma exclusiva para vinotecas parceiras.</p>
-          </div>
-          <p className="text-white/30 text-xs">© {new Date().getFullYear()} compravinho.com</p>
-        </div>
+      <div className="min-h-screen relative flex items-center justify-center overflow-hidden" style={{ background: "#0A0612" }}>
+        {/* Ambient gradient orbs */}
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl opacity-40" style={{ background: "radial-gradient(circle, #6B21A8, transparent 70%)" }} />
+        <div className="absolute -bottom-40 -right-20 w-[450px] h-[450px] rounded-full blur-3xl opacity-30" style={{ background: "radial-gradient(circle, #A855F7, transparent 70%)" }} />
+        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full blur-3xl opacity-20" style={{ background: "radial-gradient(circle, #C084FC, transparent 70%)" }} />
 
-        {/* Right panel - login */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-sm">
-            {/* Mobile logo */}
-            <div className="lg:hidden mb-8 flex justify-center">
-              <div className="relative h-10 w-48">
-                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" />
+        {/* Glass card */}
+        <div className="relative z-10 w-full max-w-[380px] mx-4">
+          <div className="rounded-3xl p-8" style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+          }}>
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative h-9 w-44 mb-1">
+                <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" style={{ filter: "brightness(0) invert(1)" }} />
               </div>
+              <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.4)" }}>Painel administrativo</p>
             </div>
 
-            <div className="mb-8">
-              <h1 className="text-2xl font-semibold mb-1" style={{ color: "var(--text-1)" }}>Painel Admin</h1>
-              <p className="text-sm" style={{ color: "var(--text-2)" }}>Entre com sua senha de administrador</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="label">Senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-3)" }} />
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                    className="input pl-9" placeholder="••••••••" autoFocus />
-                </div>
+            <form onSubmit={handleLogin} className="space-y-3">
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.35)" }} />
+                <input
+                  type="password" value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  className="w-full pl-11 pr-12 py-3.5 rounded-2xl text-sm outline-none transition-all"
+                  placeholder="Senha de acesso"
+                  autoFocus
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: error ? "1px solid rgba(220,38,38,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                    color: "#fff",
+                  }}
+                  onFocus={(e) => { e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.borderColor = "rgba(168,85,247,0.5)"; }}
+                  onBlur={(e) => { e.target.style.background = "rgba(255,255,255,0.05)"; e.target.style.borderColor = error ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.1)"; }}
+                />
+                <button type="submit" disabled={submitting}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                  style={{ background: "linear-gradient(135deg, #A855F7, #6B21A8)" }}>
+                  <ArrowRight className="w-4 h-4 text-white" />
+                </button>
               </div>
               {error && (
-                <div className="text-xs px-3 py-2.5 rounded-xl flex items-center gap-2"
-                  style={{ background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca" }}>
-                  <span>⚠</span> {error}
-                </div>
+                <p className="text-xs text-center" style={{ color: "#f87171" }}>{error}</p>
               )}
-              <button type="submit" className="btn-primary w-full justify-center py-3 text-base">
-                Entrar no painel
-              </button>
             </form>
           </div>
+          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.25)" }}>compravinho.com</p>
         </div>
       </div>
     );
