@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle, Tag } from "lucide-react";
+import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle, Tag, Instagram, Facebook, Navigation } from "lucide-react";
 import type { ItemCatalogo } from "@/types";
 
 interface CatalogData {
-  loja: { nome: string; logo_url: string | null; slug: string; cor_realce: string; whatsapp: string | null };
+  loja: {
+    nome: string; logo_url: string | null; slug: string; cor_realce: string; whatsapp: string | null;
+    instagram?: string | null; facebook?: string | null; endereco_url?: string | null; descricao?: string | null;
+  };
   itens: ItemCatalogo[];
 }
 
@@ -173,33 +176,65 @@ export default function CatalogoPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--surface-2)" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-20" style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}>
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      {/* Cover banner */}
+      <div className="h-28 sm:h-36 w-full relative" style={{ background: `linear-gradient(135deg, ${cor} 0%, ${cor}CC 50%, ${cor}88 100%)` }}>
+        <button onClick={fetchCatalog} className="absolute top-3 right-3 p-2 rounded-full transition-colors" style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }} title="Atualizar">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Profile header */}
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="flex items-end gap-4 -mt-10 sm:-mt-12 mb-4">
+          {/* Avatar */}
           {data?.loja.logo_url ? (
-            <div className="relative w-10 h-10 shrink-0 rounded-xl overflow-hidden" style={{ background: "var(--surface-2)" }}>
-              <Image src={data.loja.logo_url} alt={data.loja.nome} fill className="object-contain p-1" />
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl overflow-hidden border-4" style={{ background: "var(--surface)", borderColor: "var(--surface)", boxShadow: "var(--shadow)" }}>
+              <Image src={data.loja.logo_url} alt={data.loja.nome} fill className="object-contain p-2" />
             </div>
           ) : (
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-bold" style={{ background: cor }}>
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center shrink-0 text-white text-2xl font-bold border-4"
+              style={{ background: cor, borderColor: "var(--surface)", boxShadow: "var(--shadow)" }}>
               {data?.loja.nome[0]}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display text-lg font-semibold leading-tight truncate" style={{ color: "var(--text-1)" }}>{data?.loja.nome}</h1>
-            <p className="text-xs" style={{ color: "var(--text-3)" }}>Catálogo atualizado em tempo real</p>
-          </div>
-          <button onClick={fetchCatalog} className="btn-ghost p-2 shrink-0" title="Atualizar">
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="h-0.5" style={{ background: cor }} />
-      </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
+          {/* Name + socials */}
+          <div className="flex-1 min-w-0 pb-1">
+            <h1 className="font-display text-xl sm:text-2xl font-semibold leading-tight truncate" style={{ color: "var(--text-1)" }}>{data?.loja.nome}</h1>
+            {data?.loja.descricao && <p className="text-xs sm:text-sm mt-0.5 truncate" style={{ color: "var(--text-2)" }}>{data.loja.descricao}</p>}
+          </div>
+
+          {/* Social buttons */}
+          <div className="flex items-center gap-2 pb-1 shrink-0">
+            {data?.loja.instagram && (
+              <a href={data.loja.instagram} target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                style={{ background: "var(--surface)", border: "1.5px solid var(--border)", color: "var(--text-2)" }} title="Instagram">
+                <Instagram className="w-4 h-4" />
+              </a>
+            )}
+            {data?.loja.facebook && (
+              <a href={data.loja.facebook} target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                style={{ background: "var(--surface)", border: "1.5px solid var(--border)", color: "var(--text-2)" }} title="Facebook">
+                <Facebook className="w-4 h-4" />
+              </a>
+            )}
+            {data?.loja.endereco_url && (
+              <a href={data.loja.endereco_url} target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                style={{ background: "var(--surface)", border: "1.5px solid var(--border)", color: "var(--text-2)" }} title="Localização">
+                <Navigation className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 pb-6">
         {/* Ofertas em destaque */}
         {ofertas.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 pt-2">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: cor }}>
                 <Tag className="w-3.5 h-3.5 text-white" />
@@ -209,7 +244,7 @@ export default function CatalogoPage() {
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: "thin" }}>
               {ofertas.map((item, i) => (
-                <div key={i} className="shrink-0 w-40">
+                <div key={i} className="shrink-0 w-44">
                   <WineCard item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} compact />
                 </div>
               ))}
@@ -362,74 +397,87 @@ function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
   }
   const hasOffer = item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco);
   const discount = hasOffer ? Math.round((1 - priceNum(item.preco_oferta!) / priceNum(item.preco)) * 100) : 0;
+  const accent = hasOffer ? "#dc2626" : cor;
 
   return (
-    <div className="card overflow-hidden group transition-all duration-200 hover:shadow-md flex flex-col h-full">
-      <div className="relative aspect-[3/4]" style={{ background: "linear-gradient(to bottom, var(--surface-2), var(--surface-3))" }}>
+    <div className="group rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300"
+      style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 8px 24px ${cor}1a, 0 2px 8px rgba(0,0,0,0.04)`; e.currentTarget.style.borderColor = cor + "40"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-sm)"; e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+
+      {/* Image */}
+      <div className="relative aspect-[3/4]" style={{ background: `radial-gradient(circle at 50% 30%, ${cor}08, var(--surface-2))` }}>
         {item.imagem_url ? (
-          <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+          <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-4 group-hover:scale-[1.06] transition-transform duration-500 ease-out" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl opacity-20">🍷</span></div>
+          <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl opacity-15">🍷</span></div>
         )}
-        {hasOffer && (
-          <div className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-full text-white" style={{ background: "#dc2626" }}>
-            -{discount}%
-          </div>
-        )}
-        {!hasOffer && item.estoque <= 5 && (
-          <div className="absolute top-2 left-2 text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: cor + "15", color: cor, border: `1px solid ${cor}30` }}>
-            Últimas {item.estoque} un.
+
+        {/* Top badges */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between gap-2">
+          {!hasOffer && item.estoque <= 5 ? (
+            <span className="text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.85)", color: cor, border: `1px solid ${cor}30` }}>
+              Últimas {item.estoque}
+            </span>
+          ) : <span />}
+          {hasOffer && (
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full text-white shadow-sm" style={{ background: "#dc2626" }}>
+              -{discount}%
+            </span>
+          )}
+        </div>
+
+        {/* Bottom-left grape/origin chip on the image */}
+        {!compact && (item.uva || item.pais) && (
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 flex-wrap">
+            {item.uva && (
+              <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.85)", color: cor }}>
+                <Grape className="w-2.5 h-2.5" /> {item.uva}
+              </span>
+            )}
           </div>
         )}
       </div>
 
+      {/* Info */}
       <div className="p-3 flex-1 flex flex-col">
-        <p className="text-xs font-semibold leading-tight line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
-        {item.produtor && !compact && <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--text-3)" }}>{item.produtor}</p>}
-
-        {!compact && (
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {item.uva && (
-              <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: cor + "10", color: cor }}>
-                <Grape className="w-2.5 h-2.5" /> {item.uva}
-              </span>
-            )}
-            {item.pais && (
-              <span className="flex items-center gap-1 text-[10px]" style={{ color: "var(--text-3)" }}>
-                <MapPin className="w-2.5 h-2.5" /> {item.pais}
-              </span>
-            )}
-          </div>
+        <p className="text-xs font-semibold leading-snug line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
+        {item.produtor && !compact && (
+          <p className="text-[11px] mt-1 truncate" style={{ color: "var(--text-3)" }}>
+            {item.produtor}{item.pais ? ` · ${item.pais}` : ""}
+          </p>
         )}
 
-        <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
-          <div>
-            {hasOffer ? (
-              <>
-                <p className="text-[10px] line-through leading-none" style={{ color: "var(--text-3)" }}>{formatPrice(item.preco)}</p>
-                <p className="font-display text-base font-semibold leading-tight" style={{ color: "#dc2626" }}>{formatPrice(item.preco_oferta!)}</p>
-              </>
+        <div className="mt-auto">
+          <div className="mt-3 pt-3 flex items-end justify-between gap-2" style={{ borderTop: "1px dashed var(--border)" }}>
+            <div className="min-w-0">
+              {hasOffer ? (
+                <>
+                  <p className="text-[10px] line-through leading-none" style={{ color: "var(--text-3)" }}>{formatPrice(item.preco)}</p>
+                  <p className="font-display text-base font-bold leading-tight" style={{ color: accent }}>{formatPrice(item.preco_oferta!)}</p>
+                </>
+              ) : (
+                <p className="font-display text-base font-bold leading-tight" style={{ color: accent }}>{formatPrice(item.preco)}</p>
+              )}
+            </div>
+            {!compact && <p className="text-[10px] shrink-0 pb-0.5" style={{ color: "var(--text-3)" }}>{item.estoque} un.</p>}
+          </div>
+
+          <div className="mt-2.5">
+            {qty === 0 ? (
+              <button onClick={onAdd}
+                className="w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                style={{ background: accent }}>
+                <Plus className="w-3.5 h-3.5" /> Adicionar
+              </button>
             ) : (
-              <p className="font-display text-base font-semibold" style={{ color: cor }}>{formatPrice(item.preco)}</p>
+              <div className="flex items-center justify-between rounded-xl overflow-hidden" style={{ background: accent + "12", border: `1px solid ${accent}25` }}>
+                <button onClick={onRemove} className="p-2 transition-colors" style={{ color: accent }}><Minus className="w-3.5 h-3.5" /></button>
+                <span className="text-xs font-bold" style={{ color: accent }}>{qty} no carrinho</span>
+                <button onClick={onAdd} className="p-2 transition-colors" style={{ color: accent }}><Plus className="w-3.5 h-3.5" /></button>
+              </div>
             )}
           </div>
-          {!compact && <p className="text-[10px]" style={{ color: "var(--text-3)" }}>{item.estoque} un.</p>}
-        </div>
-
-        <div className="mt-2">
-          {qty === 0 ? (
-            <button onClick={onAdd}
-              className="w-full py-1.5 rounded-lg text-xs font-medium text-white flex items-center justify-center gap-1.5 transition-transform active:scale-95"
-              style={{ background: hasOffer ? "#dc2626" : cor }}>
-              <Plus className="w-3 h-3" /> Adicionar
-            </button>
-          ) : (
-            <div className="flex items-center justify-between rounded-lg overflow-hidden" style={{ background: (hasOffer ? "#dc2626" : cor) + "10" }}>
-              <button onClick={onRemove} className="p-1.5 transition-colors" style={{ color: hasOffer ? "#dc2626" : cor }}><Minus className="w-3.5 h-3.5" /></button>
-              <span className="text-xs font-semibold" style={{ color: hasOffer ? "#dc2626" : cor }}>{qty}</span>
-              <button onClick={onAdd} className="p-1.5 transition-colors" style={{ color: hasOffer ? "#dc2626" : cor }}><Plus className="w-3.5 h-3.5" /></button>
-            </div>
-          )}
         </div>
       </div>
     </div>
