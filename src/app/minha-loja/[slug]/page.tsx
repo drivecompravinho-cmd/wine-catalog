@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock } from "lucide-react";
+import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock, Tag } from "lucide-react";
 import Image from "next/image";
 
 interface VinhoDB { id: string; nome: string; produtor: string; uva: string; pais: string; }
@@ -236,7 +236,7 @@ export default function MinhaLojaPage() {
                 <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-2)" }}>Rótulo</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-28" style={{ color: "var(--text-2)" }}>Preço</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-28" style={{ color: "var(--text-2)" }}>Oferta</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-32" style={{ color: "var(--text-2)" }}><span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Oferta</span></th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider w-24" style={{ color: "var(--text-2)" }}>Estoque</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider w-20" style={{ color: "var(--text-2)" }}>Ativo</th>
                   <th className="w-24" />
@@ -255,10 +255,31 @@ export default function MinhaLojaPage() {
                         onBlur={() => item.dirty && saveItem(item)} placeholder="0,00" />
                     </td>
                     <td className="px-4 py-3">
-                      <input className="input py-1.5 text-sm w-24" value={item.preco_oferta || ""}
-                        onChange={(e) => updateItem(item.id, "preco_oferta", e.target.value)}
-                        onBlur={() => item.dirty && saveItem(item)} placeholder="—"
-                        style={item.preco_oferta ? { borderColor: cor, background: cor + "08" } : {}} />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const ativarOferta = !item.preco_oferta;
+                            const novoValor = ativarOferta ? (item.preco_oferta || "") : "";
+                            updateItem(item.id, "preco_oferta", novoValor);
+                            if (!ativarOferta) {
+                              const novo = { ...item, preco_oferta: "", dirty: true };
+                              setTimeout(() => saveItem(novo), 50);
+                            }
+                          }}
+                          className="w-9 h-5 rounded-full transition-colors relative inline-block shrink-0"
+                          style={{ background: item.preco_oferta !== "" && item.preco_oferta != null ? "#dc2626" : "var(--border)" }}
+                          title="Ativar oferta">
+                          <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${item.preco_oferta !== "" && item.preco_oferta != null ? "left-[18px]" : "left-0.5"}`} />
+                        </button>
+                        {item.preco_oferta !== "" && item.preco_oferta != null ? (
+                          <input className="input py-1.5 text-sm w-20" value={item.preco_oferta}
+                            onChange={(e) => updateItem(item.id, "preco_oferta", e.target.value)}
+                            onBlur={() => item.dirty && saveItem(item)} placeholder="0,00" autoFocus
+                            style={{ borderColor: "#dc2626", background: "#dc262608" }} />
+                        ) : (
+                          <span className="text-xs" style={{ color: "var(--text-3)" }}>—</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <input type="number" min={0} className="input py-1.5 text-sm w-20" value={item.estoque}
