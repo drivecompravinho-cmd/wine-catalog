@@ -19,6 +19,7 @@ export default function MinhaLojaPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  const [ofertaAtiva, setOfertaAtiva] = useState<Record<string, boolean>>({});
   const [showBusca, setShowBusca] = useState(false);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("");
@@ -258,21 +259,25 @@ export default function MinhaLojaPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
-                            const ativarOferta = !item.preco_oferta;
-                            const novoValor = ativarOferta ? (item.preco_oferta || "") : "";
-                            updateItem(item.id, "preco_oferta", novoValor);
-                            if (!ativarOferta) {
+                            const ativo = ofertaAtiva[item.id] ?? !!item.preco_oferta;
+                            if (ativo) {
+                              // Desativar: limpa e salva
+                              setOfertaAtiva((p) => ({ ...p, [item.id]: false }));
+                              updateItem(item.id, "preco_oferta", "");
                               const novo = { ...item, preco_oferta: "", dirty: true };
                               setTimeout(() => saveItem(novo), 50);
+                            } else {
+                              // Ativar: só mostra o campo, não salva ainda
+                              setOfertaAtiva((p) => ({ ...p, [item.id]: true }));
                             }
                           }}
                           className="w-9 h-5 rounded-full transition-colors relative inline-block shrink-0"
-                          style={{ background: item.preco_oferta !== "" && item.preco_oferta != null ? "#dc2626" : "var(--border)" }}
+                          style={{ background: (ofertaAtiva[item.id] ?? !!item.preco_oferta) ? "#dc2626" : "var(--border)" }}
                           title="Ativar oferta">
-                          <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${item.preco_oferta !== "" && item.preco_oferta != null ? "left-[18px]" : "left-0.5"}`} />
+                          <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${(ofertaAtiva[item.id] ?? !!item.preco_oferta) ? "left-[18px]" : "left-0.5"}`} />
                         </button>
-                        {item.preco_oferta !== "" && item.preco_oferta != null ? (
-                          <input className="input py-1.5 text-sm w-20" value={item.preco_oferta}
+                        {(ofertaAtiva[item.id] ?? !!item.preco_oferta) ? (
+                          <input className="input py-1.5 text-sm w-20" value={item.preco_oferta || ""}
                             onChange={(e) => updateItem(item.id, "preco_oferta", e.target.value)}
                             onBlur={() => item.dirty && saveItem(item)} placeholder="0,00" autoFocus
                             style={{ borderColor: "#dc2626", background: "#dc262608" }} />
