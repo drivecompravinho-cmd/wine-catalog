@@ -21,11 +21,13 @@ export interface Loja {
   dominio_customizado: string | null;
   ativo: boolean;
   created_at: string;
+  total_vinhos?: number;
 }
 
 export interface ItemCatalogo {
   nome: string;
   preco: string;
+  preco_oferta?: string | null;
   estoque: number;
   ativo: boolean;
   produtor?: string;
