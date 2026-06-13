@@ -18,6 +18,10 @@ export interface Loja {
   sheet_id: string;
   senha_cliente: string;
   whatsapp: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  endereco_url: string | null;
+  descricao: string | null;
   dominio_customizado: string | null;
   ativo: boolean;
   created_at: string;
