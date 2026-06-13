@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle } from "lucide-react";
+import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle, Tag } from "lucide-react";
 import type { ItemCatalogo } from "@/types";
 
 interface CatalogData {
@@ -60,6 +60,12 @@ export default function CatalogoPage() {
     return matchSearch && matchFilter;
   });
 
+  const ofertas = (data?.itens ?? []).filter((item) => item.preco_oferta && priceNumStatic(item.preco_oferta) > 0 && priceNumStatic(item.preco_oferta) < priceNumStatic(item.preco));
+
+  function priceNumStatic(preco: string) {
+    return parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
+  }
+
   function formatPrice(preco: string) {
     const num = parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, ""));
     if (isNaN(num)) return preco;
@@ -68,6 +74,19 @@ export default function CatalogoPage() {
 
   function priceNum(preco: string) {
     return parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
+  }
+
+  function discountPercent(preco: string, oferta: string) {
+    const p = priceNum(preco);
+    const o = priceNum(oferta);
+    if (!p || !o) return 0;
+    return Math.round((1 - o / p) * 100);
+  }
+
+  function effectivePrice(item: ItemCatalogo) {
+    return item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco)
+      ? item.preco_oferta
+      : item.preco;
   }
 
   function addToCart(nome: string) {
@@ -108,13 +127,13 @@ export default function CatalogoPage() {
       .filter((i): i is CartItem => i !== null);
   }, [cart, data]);
 
-  const cartTotal = cartItems.reduce((sum, item) => sum + priceNum(item.preco) * item.qty, 0);
+  const cartTotal = cartItems.reduce((sum, item) => sum + priceNum(effectivePrice(item)) * item.qty, 0);
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
   function buildWhatsappMessage() {
     const lines = [`Olá! Gostaria de fazer um pedido em *${data?.loja.nome}*:`, ""];
     cartItems.forEach((item) => {
-      lines.push(`• ${item.qty}x ${item.nome} — ${formatPrice(item.preco)} cada`);
+      lines.push(`• ${item.qty}x ${item.nome} — ${formatPrice(effectivePrice(item))} cada`);
     });
     lines.push("");
     lines.push(`*Total: ${formatPrice(cartTotal.toString())}*`);
@@ -178,6 +197,26 @@ export default function CatalogoPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Ofertas em destaque */}
+        {ofertas.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: cor }}>
+                <Tag className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs font-semibold text-white uppercase tracking-wide">Ofertas</span>
+              </div>
+              <span className="text-xs" style={{ color: "var(--text-3)" }}>{ofertas.length} vinho{ofertas.length !== 1 ? "s" : ""} com desconto</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: "thin" }}>
+              {ofertas.map((item, i) => (
+                <div key={i} className="shrink-0 w-40">
+                  <WineCard item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} compact />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Search + filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
@@ -206,70 +245,7 @@ export default function CatalogoPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredItens.map((item, i) => {
-              const qtyInCart = cart[item.nome] ?? 0;
-              return (
-                <div key={i} className="card overflow-hidden group transition-all duration-200 hover:shadow-md flex flex-col">
-                  <div className="relative aspect-[3/4]" style={{ background: "linear-gradient(to bottom, var(--surface-2), var(--surface-3))" }}>
-                    {item.imagem_url ? (
-                      <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl opacity-20">🍷</span></div>
-                    )}
-                    {item.estoque <= 5 && (
-                      <div className="absolute top-2 left-2 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                        style={{ background: cor + "15", color: cor, border: `1px solid ${cor}30` }}>
-                        Últimas {item.estoque} un.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-3 flex-1 flex flex-col">
-                    <p className="text-xs font-semibold leading-tight line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
-                    {item.produtor && <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--text-3)" }}>{item.produtor}</p>}
-
-                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      {item.uva && (
-                        <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: cor + "10", color: cor }}>
-                          <Grape className="w-2.5 h-2.5" /> {item.uva}
-                        </span>
-                      )}
-                      {item.pais && (
-                        <span className="flex items-center gap-1 text-[10px]" style={{ color: "var(--text-3)" }}>
-                          <MapPin className="w-2.5 h-2.5" /> {item.pais}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
-                      <p className="font-display text-base font-semibold" style={{ color: cor }}>{formatPrice(item.preco)}</p>
-                      <p className="text-[10px]" style={{ color: "var(--text-3)" }}>{item.estoque} un.</p>
-                    </div>
-
-                    {/* Add to cart */}
-                    <div className="mt-2">
-                      {qtyInCart === 0 ? (
-                        <button onClick={() => addToCart(item.nome)}
-                          className="w-full py-1.5 rounded-lg text-xs font-medium text-white flex items-center justify-center gap-1.5 transition-transform active:scale-95"
-                          style={{ background: cor }}>
-                          <Plus className="w-3 h-3" /> Adicionar
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-between rounded-lg overflow-hidden" style={{ background: cor + "10" }}>
-                          <button onClick={() => removeFromCart(item.nome)} className="p-1.5 transition-colors" style={{ color: cor }}>
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="text-xs font-semibold" style={{ color: cor }}>{qtyInCart} no carrinho</span>
-                          <button onClick={() => addToCart(item.nome)} className="p-1.5 transition-colors" style={{ color: cor }}>
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredItens.map((item, i) => <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />)}
           </div>
         )}
 
@@ -368,6 +344,94 @@ export default function CatalogoPage() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+
+function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
+  item: ItemCatalogo; cor: string; qty: number; onAdd: () => void; onRemove: () => void; compact?: boolean;
+}) {
+  function priceNum(preco: string) {
+    return parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
+  }
+  function formatPrice(preco: string) {
+    const num = priceNum(preco);
+    if (isNaN(num)) return preco;
+    return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+  const hasOffer = item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco);
+  const discount = hasOffer ? Math.round((1 - priceNum(item.preco_oferta!) / priceNum(item.preco)) * 100) : 0;
+
+  return (
+    <div className="card overflow-hidden group transition-all duration-200 hover:shadow-md flex flex-col h-full">
+      <div className="relative aspect-[3/4]" style={{ background: "linear-gradient(to bottom, var(--surface-2), var(--surface-3))" }}>
+        {item.imagem_url ? (
+          <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl opacity-20">🍷</span></div>
+        )}
+        {hasOffer && (
+          <div className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-full text-white" style={{ background: "#dc2626" }}>
+            -{discount}%
+          </div>
+        )}
+        {!hasOffer && item.estoque <= 5 && (
+          <div className="absolute top-2 left-2 text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: cor + "15", color: cor, border: `1px solid ${cor}30` }}>
+            Últimas {item.estoque} un.
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 flex-1 flex flex-col">
+        <p className="text-xs font-semibold leading-tight line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
+        {item.produtor && !compact && <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--text-3)" }}>{item.produtor}</p>}
+
+        {!compact && (
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {item.uva && (
+              <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: cor + "10", color: cor }}>
+                <Grape className="w-2.5 h-2.5" /> {item.uva}
+              </span>
+            )}
+            {item.pais && (
+              <span className="flex items-center gap-1 text-[10px]" style={{ color: "var(--text-3)" }}>
+                <MapPin className="w-2.5 h-2.5" /> {item.pais}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+          <div>
+            {hasOffer ? (
+              <>
+                <p className="text-[10px] line-through leading-none" style={{ color: "var(--text-3)" }}>{formatPrice(item.preco)}</p>
+                <p className="font-display text-base font-semibold leading-tight" style={{ color: "#dc2626" }}>{formatPrice(item.preco_oferta!)}</p>
+              </>
+            ) : (
+              <p className="font-display text-base font-semibold" style={{ color: cor }}>{formatPrice(item.preco)}</p>
+            )}
+          </div>
+          {!compact && <p className="text-[10px]" style={{ color: "var(--text-3)" }}>{item.estoque} un.</p>}
+        </div>
+
+        <div className="mt-2">
+          {qty === 0 ? (
+            <button onClick={onAdd}
+              className="w-full py-1.5 rounded-lg text-xs font-medium text-white flex items-center justify-center gap-1.5 transition-transform active:scale-95"
+              style={{ background: hasOffer ? "#dc2626" : cor }}>
+              <Plus className="w-3 h-3" /> Adicionar
+            </button>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg overflow-hidden" style={{ background: (hasOffer ? "#dc2626" : cor) + "10" }}>
+              <button onClick={onRemove} className="p-1.5 transition-colors" style={{ color: hasOffer ? "#dc2626" : cor }}><Minus className="w-3.5 h-3.5" /></button>
+              <span className="text-xs font-semibold" style={{ color: hasOffer ? "#dc2626" : cor }}>{qty}</span>
+              <button onClick={onAdd} className="p-1.5 transition-colors" style={{ color: hasOffer ? "#dc2626" : cor }}><Plus className="w-3.5 h-3.5" /></button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
