@@ -143,8 +143,11 @@ export default function CatalogoPage() {
 
       {/* Profile card — branco, avatar sobreposto */}
       <div className="max-w-5xl mx-auto px-4">
-        <div className="bg-white rounded-2xl -mt-6 relative z-10 px-6 pt-0 pb-5"
-          style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.06)" }}>
+        {/* Linha de cor da vinoteca */}
+        <div className="h-1 -mt-6 relative z-20 mx-0" style={{ background: cor }} />
+
+        <div className="bg-white relative z-10 px-6 pt-0 pb-5 rounded-b-2xl"
+          style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.06)", borderTop: "none" }}>
 
           {/* Avatar row */}
           <div className="flex items-end justify-between -mt-10 mb-4">
