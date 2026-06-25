@@ -14,6 +14,7 @@ export interface Loja {
   slug: string;
   nome: string;
   logo_url: string | null;
+  banner_url: string | null;
   cor_realce: string;
   sheet_id: string;
   senha_cliente: string;
