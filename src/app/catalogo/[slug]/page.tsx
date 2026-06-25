@@ -125,90 +125,90 @@ export default function CatalogoPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--surface-2)" }}>
-      {/* Hero — banner + identity sobreposta */}
-      <div className="relative w-full overflow-hidden" style={{ height: "280px" }}>
-        {/* Background */}
+      {/* Banner */}
+      <div className="relative w-full overflow-hidden" style={{ height: "200px" }}>
         {data?.loja.banner_url ? (
           <Image src={data.loja.banner_url} alt="capa" fill className="object-cover" priority />
         ) : (
-          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${cor}EE 0%, ${cor}99 100%)` }} />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${cor}DD 0%, ${cor}88 100%)` }} />
         )}
-
-        {/* Gradiente para legibilidade */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)" }} />
-
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.04), rgba(0,0,0,0.12))" }} />
         {/* Refresh */}
         <button onClick={fetchCatalog}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-          style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff" }}>
-          <RefreshCw className="w-4 h-4" />
+          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.18)", backdropFilter: "blur(6px)", color: "rgba(255,255,255,0.85)" }}>
+          <RefreshCw className="w-3.5 h-3.5" />
         </button>
+      </div>
 
-        {/* Social buttons — top right (below refresh) */}
-        <div className="absolute top-4 right-16 flex items-center gap-2">
-          {data?.loja.instagram && (
-            <a href={data.loja.instagram} target="_blank" rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff" }}>
-              <Instagram className="w-4 h-4" />
-            </a>
-          )}
-          {data?.loja.facebook && (
-            <a href={data.loja.facebook} target="_blank" rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff" }}>
-              <Facebook className="w-4 h-4" />
-            </a>
-          )}
-          {data?.loja.endereco_url && (
-            <a href={data.loja.endereco_url} target="_blank" rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.25)", color: "#fff" }}>
-              <Navigation className="w-4 h-4" />
-            </a>
-          )}
-        </div>
+      {/* Profile card — branco, avatar sobreposto */}
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="bg-white rounded-2xl -mt-6 relative z-10 px-6 pt-0 pb-5"
+          style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.06)" }}>
 
-        {/* Identity — avatar + nome sobrepostos na imagem */}
-        <div className="absolute bottom-0 left-0 right-0 max-w-5xl mx-auto px-6 pb-6 flex items-end gap-5">
-          {/* Avatar circular com borda branca */}
-          <div className="shrink-0 rounded-full overflow-hidden"
-            style={{
-              width: 96, height: 96,
-              border: "3px solid rgba(255,255,255,0.9)",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
-              background: cor,
-              flexShrink: 0,
-            }}>
-            {data?.loja.logo_url ? (
-              <div className="relative w-full h-full">
-                <Image src={data.loja.logo_url} alt={data?.loja.nome ?? ""} fill className="object-cover" />
-              </div>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white text-3xl font-bold font-display">
-                {data?.loja.nome[0]}
-              </div>
-            )}
+          {/* Avatar row */}
+          <div className="flex items-end justify-between -mt-10 mb-4">
+            {/* Avatar */}
+            <div className="rounded-full overflow-hidden shrink-0"
+              style={{ width: 80, height: 80, border: "3px solid white", boxShadow: "0 2px 12px rgba(0,0,0,0.15)", background: cor }}>
+              {data?.loja.logo_url ? (
+                <div className="relative w-full h-full">
+                  <Image src={data.loja.logo_url} alt={data?.loja.nome ?? ""} fill className="object-cover" />
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-display">
+                  {data?.loja.nome[0]}
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 pb-1">
+              {data?.loja.whatsapp && (
+                <a href={`https://wa.me/${data.loja.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"
+                  style={{ background: "#25D366", color: "#fff" }}>
+                  <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                </a>
+              )}
+              {data?.loja.instagram && (
+                <a href={data.loja.instagram} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
+                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  <Instagram className="w-4 h-4" />
+                </a>
+              )}
+              {data?.loja.facebook && (
+                <a href={data.loja.facebook} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
+                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  <Facebook className="w-4 h-4" />
+                </a>
+              )}
+              {data?.loja.endereco_url && (
+                <a href={data.loja.endereco_url} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
+                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  <Navigation className="w-4 h-4" />
+                </a>
+              )}
+            </div>
           </div>
 
-          {/* Nome + descrição sobre a imagem */}
-          <div className="flex-1 min-w-0 pb-1">
-            <h1 className="font-display font-bold leading-tight text-white"
-              style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
+          {/* Name + description */}
+          <div>
+            <h1 className="font-display font-bold text-xl leading-tight" style={{ color: "#111" }}>
               {data?.loja.nome}
             </h1>
             {data?.loja.descricao && (
-              <p className="mt-1 text-sm leading-tight" style={{ color: "rgba(255,255,255,0.8)", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>
+              <p className="text-sm mt-1 leading-relaxed" style={{ color: "#6b7280" }}>
                 {data.loja.descricao}
               </p>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4">
-        {/* Spacer after hero */}
-        <div className="h-5" />
+        <div className="h-6" />
 
         {/* Ofertas */}
         {ofertas.length > 0 && (
