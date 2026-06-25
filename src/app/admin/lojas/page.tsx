@@ -37,8 +37,27 @@ function ImageUploader({ label, bucket, value, onChange, aspect }: {
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
     setError("");
+
+    // Validate dimensions for banner
+    if (aspect === "banner") {
+      const valid = await new Promise<boolean>((resolve) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const ratio = img.width / img.height;
+          resolve(ratio >= 2.5); // minimum 2.5:1 ratio (e.g. 1200x480)
+        };
+        img.onerror = () => resolve(false);
+        img.src = URL.createObjectURL(file);
+      });
+      if (!valid) {
+        setError("A capa deve ser uma imagem horizontal (mínimo 2.5x mais larga que alta). Ex: 1200x480px");
+        if (inputRef.current) inputRef.current.value = "";
+        return;
+      }
+    }
+
+    setUploading(true);
     const fd = new FormData();
     fd.append("file", file);
     fd.append("bucket", bucket);
@@ -55,7 +74,7 @@ function ImageUploader({ label, bucket, value, onChange, aspect }: {
       <label className="label">{label}</label>
       <div className="flex items-start gap-3">
         <div className="shrink-0 rounded-xl overflow-hidden flex items-center justify-center"
-          style={{ width: aspect === "banner" ? 120 : 64, height: aspect === "banner" ? 48 : 64, background: "var(--surface-3)", border: "1.5px solid var(--border)" }}>
+          style={{ width: aspect === "banner" ? 140 : 64, height: aspect === "banner" ? 56 : 64, background: "var(--surface-3)", border: "1.5px solid var(--border)" }}>
           {value ? (
             <div className="relative w-full h-full">
               <Image src={value} alt={label} fill className="object-cover" />
