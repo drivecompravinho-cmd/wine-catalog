@@ -8,13 +8,28 @@ import type { ItemCatalogo } from "@/types";
 
 interface CatalogData {
   loja: {
-    nome: string; logo_url: string | null; banner_url?: string | null; slug: string; cor_realce: string; whatsapp: string | null;
-    instagram?: string | null; facebook?: string | null; endereco_url?: string | null; descricao?: string | null;
+    nome: string; logo_url: string | null; banner_url?: string | null; slug: string; cor_realce: string;
+    whatsapp: string | null; instagram?: string | null; facebook?: string | null;
+    endereco_url?: string | null; descricao?: string | null;
   };
   itens: ItemCatalogo[];
 }
-
 interface CartItem extends ItemCatalogo { qty: number; }
+
+function priceNum(p: string) { return parseFloat(p.replace(",", ".").replace(/[^0-9.]/g, "")) || 0; }
+function fmt(p: string) {
+  const n = priceNum(p);
+  return isNaN(n) ? p : n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function effectivePrice(item: ItemCatalogo) {
+  return item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco) ? item.preco_oferta : item.preco;
+}
+function hasOffer(item: ItemCatalogo) {
+  return !!(item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco));
+}
+function discount(item: ItemCatalogo) {
+  return hasOffer(item) ? Math.round((1 - priceNum(item.preco_oferta!) / priceNum(item.preco)) * 100) : 0;
+}
 
 export default function CatalogoPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -32,7 +47,7 @@ export default function CatalogoPage() {
       const res = await fetch(`/api/catalogo/${slug}`);
       if (!res.ok) throw new Error();
       setData(await res.json());
-    } catch { setError("Catálogo não encontrado ou indisponível."); }
+    } catch { setError("Catálogo não encontrado."); }
     finally { setLoading(false); }
   }, [slug]);
 
@@ -40,192 +55,162 @@ export default function CatalogoPage() {
 
   const cor = data?.loja.cor_realce || "#6B21A8";
 
-  const filteredItens = (data?.itens ?? []).filter((item) => {
-    const matchSearch = item.nome.toLowerCase().includes(search.toLowerCase()) ||
-      (item.produtor ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (item.uva ?? "").toLowerCase().includes(search.toLowerCase());
-    const uva = (item.uva ?? "").toLowerCase();
-    const nome = item.nome.toLowerCase();
-    const matchFilter = filter === "todos" ||
-      (filter === "tinto" && (uva.includes("malbec") || uva.includes("cabernet") || uva.includes("merlot") || uva.includes("syrah") || uva.includes("tinto") || nome.includes("tinto"))) ||
-      (filter === "branco" && (uva.includes("chardonnay") || uva.includes("sauvignon") || uva.includes("riesling") || uva.includes("branco") || nome.includes("branco"))) ||
-      (filter === "rose" && (nome.includes("rosé") || nome.includes("rose"))) ||
-      (filter === "espumante" && (nome.includes("espumante") || nome.includes("prosecco") || nome.includes("champagne") || nome.includes("cava")));
-    return matchSearch && matchFilter;
+  const filtered = (data?.itens ?? []).filter((item) => {
+    const q = search.toLowerCase();
+    const match = !q || item.nome.toLowerCase().includes(q) || (item.produtor ?? "").toLowerCase().includes(q) || (item.uva ?? "").toLowerCase().includes(q);
+    const uva = (item.uva ?? "").toLowerCase(), nome = item.nome.toLowerCase();
+    const type = filter === "todos" ||
+      (filter === "tinto" && (uva.match(/malbec|cabernet|merlot|syrah|tinto|tempranillo|bonarda/))) ||
+      (filter === "branco" && (uva.match(/chardonnay|sauvignon|riesling|branco|torront/))) ||
+      (filter === "rose" && nome.match(/ros[eé]/)) ||
+      (filter === "espumante" && nome.match(/espumante|prosecco|champagne|cava|crémant/));
+    return match && type;
   });
 
-  const ofertas = (data?.itens ?? []).filter((item) => {
-    const pn = (p: string) => parseFloat(p.replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
-    return item.preco_oferta && pn(item.preco_oferta) > 0 && pn(item.preco_oferta) < pn(item.preco);
-  });
-
-  function priceNum(preco: string) { return parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, "")) || 0; }
-  function formatPrice(preco: string) {
-    const num = priceNum(preco);
-    return isNaN(num) ? preco : num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  }
-  function effectivePrice(item: ItemCatalogo) {
-    return item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco) ? item.preco_oferta : item.preco;
-  }
+  const ofertas = (data?.itens ?? []).filter(hasOffer);
 
   function addToCart(nome: string) {
-    setCart((prev) => {
-      const item = data?.itens.find((i) => i.nome === nome);
-      const max = item?.estoque ?? 99;
-      const current = prev[nome] ?? 0;
-      if (current >= max) return prev;
-      return { ...prev, [nome]: current + 1 };
+    setCart(prev => {
+      const max = data?.itens.find(i => i.nome === nome)?.estoque ?? 99;
+      return (prev[nome] ?? 0) >= max ? prev : { ...prev, [nome]: (prev[nome] ?? 0) + 1 };
     });
   }
   function removeFromCart(nome: string) {
-    setCart((prev) => {
-      const current = prev[nome] ?? 0;
-      if (current <= 1) { const { [nome]: _, ...rest } = prev; return rest; }
-      return { ...prev, [nome]: current - 1 };
+    setCart(prev => {
+      if ((prev[nome] ?? 0) <= 1) { const { [nome]: _, ...r } = prev; return r; }
+      return { ...prev, [nome]: prev[nome] - 1 };
     });
   }
-  function clearCartItem(nome: string) {
-    setCart((prev) => { const { [nome]: _, ...rest } = prev; return rest; });
-  }
+  function clearItem(nome: string) { setCart(prev => { const { [nome]: _, ...r } = prev; return r; }); }
 
-  const cartItems: CartItem[] = useMemo(() => Object.entries(cart).map(([nome, qty]) => {
-    const item = data?.itens.find((i) => i.nome === nome);
-    if (!item) return null;
-    return { ...item, qty };
-  }).filter((i): i is CartItem => i !== null), [cart, data]);
+  const cartItems: CartItem[] = useMemo(() =>
+    Object.entries(cart).map(([nome, qty]) => {
+      const item = data?.itens.find(i => i.nome === nome);
+      return item ? { ...item, qty } : null;
+    }).filter((i): i is CartItem => i !== null), [cart, data]);
 
-  const cartTotal = cartItems.reduce((sum, item) => sum + priceNum(effectivePrice(item)) * item.qty, 0);
-  const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
+  const cartTotal = cartItems.reduce((s, i) => s + priceNum(effectivePrice(i)) * i.qty, 0);
+  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
 
-  function sendToWhatsapp() {
+  function sendWpp() {
     if (!data?.loja.whatsapp) return;
-    const phone = data.loja.whatsapp.replace(/\D/g, "");
-    const lines = [`Olá! Gostaria de fazer um pedido em *${data.loja.nome}*:`, ""];
-    cartItems.forEach((item) => lines.push(`• ${item.qty}x ${item.nome} — ${formatPrice(effectivePrice(item))} cada`));
-    lines.push("", `*Total: ${formatPrice(cartTotal.toString())}*`);
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+    const lines = [`Olá! Pedido em *${data.loja.nome}*:`, ""];
+    cartItems.forEach(i => lines.push(`• ${i.qty}x ${i.nome} — ${fmt(effectivePrice(i))}`));
+    lines.push("", `*Total: ${fmt(cartTotal.toString())}*`);
+    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--surface-2)" }}>
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto mb-3" style={{ borderColor: "#6B21A8", borderTopColor: "transparent" }} />
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>Carregando catálogo...</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f4f4f6" }}>
+      <div className="w-7 h-7 border-2 rounded-full animate-spin" style={{ borderColor: "#6B21A8", borderTopColor: "transparent" }} />
     </div>
   );
-
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--surface-2)" }}>
-      <div className="text-center"><span className="text-4xl mb-4 block">🍷</span><p style={{ color: "var(--text-2)" }}>{error}</p></div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "#f4f4f6" }}>
+      <p style={{ color: "#6b7280" }}>{error}</p>
     </div>
   );
 
-  const filters = ["todos", "tinto", "branco", "rose", "espumante"];
+  const filters = [
+    { key: "todos", label: "Todos" },
+    { key: "tinto", label: "Tinto" },
+    { key: "branco", label: "Branco" },
+    { key: "rose", label: "Rosé" },
+    { key: "espumante", label: "Espumante" },
+  ];
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--surface-2)" }}>
-      {/* Banner */}
-      <div className="relative w-full overflow-hidden" style={{ height: "200px" }}>
-        {data?.loja.banner_url ? (
-          <Image src={data.loja.banner_url} alt="capa" fill className="object-cover" priority />
-        ) : (
-          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${cor}DD 0%, ${cor}88 100%)` }} />
-        )}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.04), rgba(0,0,0,0.12))" }} />
-        {/* Refresh */}
-        <button onClick={fetchCatalog}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.18)", backdropFilter: "blur(6px)", color: "rgba(255,255,255,0.85)" }}>
+    <div className="min-h-screen" style={{ background: "#f4f4f6" }}>
+
+      {/* ── HERO ── */}
+      <div className="relative w-full" style={{ height: 220 }}>
+        {data?.loja.banner_url
+          ? <Image src={data.loja.banner_url} alt="" fill className="object-cover" priority />
+          : <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${cor}CC, ${cor}55)` }} />}
+        {/* bottom fade */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45) 100%)" }} />
+        {/* accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: cor }} />
+        {/* refresh */}
+        <button onClick={fetchCatalog} className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.25)", backdropFilter: "blur(8px)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}>
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Profile card — branco, avatar sobreposto */}
-      <div className="max-w-5xl mx-auto px-4">
-        {/* Linha de cor da vinoteca */}
-        <div className="h-1 -mt-6 relative z-20 mx-0" style={{ background: cor }} />
-
-        <div className="bg-white relative z-10 px-6 pt-0 pb-5 rounded-b-2xl"
-          style={{ boxShadow: "0 2px 24px rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.06)", borderTop: "none" }}>
-
-          {/* Avatar row */}
-          <div className="flex items-end justify-between -mt-10 mb-4">
+      {/* ── PROFILE CARD ── glassmorphism */}
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="relative -mt-14 z-10 rounded-3xl overflow-hidden"
+          style={{
+            background: "rgba(255,255,255,0.72)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.9)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.6) inset",
+          }}>
+          <div className="px-6 pt-5 pb-5 flex items-center gap-5">
             {/* Avatar */}
-            <div className="rounded-full overflow-hidden shrink-0"
-              style={{ width: 80, height: 80, border: "3px solid white", boxShadow: "0 2px 12px rgba(0,0,0,0.15)", background: cor }}>
-              {data?.loja.logo_url ? (
-                <div className="relative w-full h-full">
-                  <Image src={data.loja.logo_url} alt={data?.loja.nome ?? ""} fill className="object-cover" />
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-display">
-                  {data?.loja.nome[0]}
-                </div>
-              )}
+            <div className="shrink-0 rounded-full overflow-hidden"
+              style={{ width: 72, height: 72, border: "2.5px solid white", boxShadow: `0 0 0 2px ${cor}55, 0 4px 16px rgba(0,0,0,0.18)`, background: cor }}>
+              {data?.loja.logo_url
+                ? <div className="relative w-full h-full"><Image src={data.loja.logo_url} alt="" fill className="object-cover" /></div>
+                : <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-display">{data?.loja.nome[0]}</div>}
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 pb-1">
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display font-bold text-lg leading-tight truncate" style={{ color: "#111" }}>{data?.loja.nome}</h1>
+              {data?.loja.descricao && <p className="text-xs mt-0.5 truncate" style={{ color: "#9ca3af" }}>{data.loja.descricao}</p>}
+            </div>
+
+            {/* Social actions */}
+            <div className="flex items-center gap-2 shrink-0">
               {data?.loja.whatsapp && (
-                <a href={`https://wa.me/${data.loja.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"
-                  style={{ background: "#25D366", color: "#fff" }}>
+                <a href={`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-white transition-opacity hover:opacity-85"
+                  style={{ background: "#25D366", boxShadow: "0 2px 8px #25D36640" }}>
                   <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                 </a>
               )}
               {data?.loja.instagram && (
                 <a href={data.loja.instagram} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
-                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                  style={{ background: "rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)", color: "#374151" }}>
                   <Instagram className="w-4 h-4" />
                 </a>
               )}
               {data?.loja.facebook && (
                 <a href={data.loja.facebook} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
-                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                  style={{ background: "rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)", color: "#374151" }}>
                   <Facebook className="w-4 h-4" />
                 </a>
               )}
               {data?.loja.endereco_url && (
                 <a href={data.loja.endereco_url} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-gray-100"
-                  style={{ border: "1.5px solid #e5e7eb", color: "#374151" }}>
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                  style={{ background: "rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)", color: "#374151" }}>
                   <Navigation className="w-4 h-4" />
                 </a>
               )}
             </div>
           </div>
-
-          {/* Name + description */}
-          <div>
-            <h1 className="font-display font-bold text-xl leading-tight" style={{ color: "#111" }}>
-              {data?.loja.nome}
-            </h1>
-            {data?.loja.descricao && (
-              <p className="text-sm mt-1 leading-relaxed" style={{ color: "#6b7280" }}>
-                {data.loja.descricao}
-              </p>
-            )}
-          </div>
         </div>
+      </div>
 
-        <div className="h-6" />
+      {/* ── CONTENT ── */}
+      <div className="max-w-4xl mx-auto px-4 pt-6 pb-24">
 
         {/* Ofertas */}
         {ofertas.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: cor }}>
-                <Tag className="w-3.5 h-3.5 text-white" />
-                <span className="text-xs font-semibold text-white uppercase tracking-wide">Ofertas</span>
-              </div>
-              <span className="text-xs" style={{ color: "var(--text-3)" }}>{ofertas.length} vinho{ofertas.length !== 1 ? "s" : ""} com desconto</span>
+              <Tag className="w-3.5 h-3.5" style={{ color: cor }} />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: cor }}>Ofertas</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: "thin" }}>
+            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
               {ofertas.map((item, i) => (
-                <div key={i} className="shrink-0 w-44">
+                <div key={i} className="shrink-0 w-40">
                   <WineCard item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} compact />
                 </div>
               ))}
@@ -234,106 +219,121 @@ export default function CatalogoPage() {
         )}
 
         {/* Search + filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 mb-5">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-3)" }} />
-            <input className="input pl-9" placeholder="Buscar vinho, uva ou produtor..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+            <input className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-sm outline-none transition-all"
+              placeholder="Buscar vinho, uva ou produtor..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)", color: "#111" }}
+              onFocus={e => { e.target.style.background = "#fff"; e.target.style.boxShadow = `0 0 0 2px ${cor}30`; }}
+              onBlur={e => { e.target.style.background = "rgba(255,255,255,0.8)"; e.target.style.boxShadow = "none"; }} />
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {filters.map((f) => (
-              <button key={f} onClick={() => setFilter(f)}
-                className="px-3 py-2 rounded-xl text-xs font-medium transition-all capitalize"
-                style={filter === f ? { background: cor, color: "#fff" } : { background: "var(--surface)", border: "1.5px solid var(--border)", color: "var(--text-2)" }}>
-                {f === "rose" ? "Rosé" : f.charAt(0).toUpperCase() + f.slice(1)}
+          <div className="flex gap-1.5 flex-wrap">
+            {filters.map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                className="px-4 py-2.5 rounded-2xl text-xs font-medium transition-all"
+                style={filter === f.key
+                  ? { background: cor, color: "#fff", boxShadow: `0 2px 8px ${cor}40` }
+                  : { background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,0,0,0.08)", color: "#6b7280" }}>
+                {f.label}
               </button>
             ))}
           </div>
         </div>
 
-        <p className="text-xs mb-4" style={{ color: "var(--text-3)" }}>{filteredItens.length} {filteredItens.length === 1 ? "vinho disponível" : "vinhos disponíveis"}</p>
+        <p className="text-xs mb-4" style={{ color: "#9ca3af" }}>
+          {filtered.length} {filtered.length === 1 ? "vinho disponível" : "vinhos disponíveis"}
+        </p>
 
-        {filteredItens.length === 0 ? (
-          <div className="text-center py-20" style={{ color: "var(--text-3)" }}>
-            <span className="text-4xl mb-3 block">🍾</span>
-            <p className="text-sm">Nenhum vinho encontrado.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredItens.map((item, i) => (
-              <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />
-            ))}
-          </div>
-        )}
+        {filtered.length === 0
+          ? <div className="text-center py-20"><span className="text-4xl mb-3 block opacity-30">🍾</span><p className="text-sm" style={{ color: "#9ca3af" }}>Nenhum vinho encontrado.</p></div>
+          : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {filtered.map((item, i) => (
+                <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />
+              ))}
+            </div>
+        }
 
-        <p className="text-center text-xs mt-12 pb-6" style={{ color: "var(--text-3)" }}>
-          Preços e disponibilidade atualizados pelo vendedor · {new Date().toLocaleDateString("pt-BR")}
+        <p className="text-center text-xs mt-12" style={{ color: "#d1d5db" }}>
+          Atualizado em {new Date().toLocaleDateString("pt-BR")}
         </p>
       </div>
 
-      {/* Floating cart */}
+      {/* ── CART BUTTON ── */}
       {cartCount > 0 && !cartOpen && (
         <button onClick={() => setCartOpen(true)}
-          className="fixed bottom-6 right-6 z-30 flex items-center gap-2.5 pl-4 pr-5 py-3.5 rounded-full text-white font-medium text-sm shadow-lg transition-transform hover:scale-105"
-          style={{ background: cor, boxShadow: `0 8px 24px ${cor}50` }}>
+          className="fixed bottom-6 right-6 z-30 flex items-center gap-3 pl-4 pr-5 py-3.5 rounded-full text-white font-semibold text-sm transition-all hover:scale-105 active:scale-95"
+          style={{ background: cor, boxShadow: `0 8px 32px ${cor}60` }}>
           <div className="relative">
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-2 -right-2 bg-white text-[10px] font-bold flex items-center justify-center rounded-full"
+            <span className="absolute -top-2 -right-2 w-4.5 h-4.5 bg-white rounded-full text-[10px] font-bold flex items-center justify-center"
               style={{ color: cor, minWidth: 18, height: 18 }}>{cartCount}</span>
           </div>
-          {formatPrice(cartTotal.toString())}
+          {fmt(cartTotal.toString())}
         </button>
       )}
 
-      {/* Cart panel */}
+      {/* ── CART PANEL ── */}
       {cartOpen && (
         <>
-          <div className="fixed inset-0 z-40" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)" }} onClick={() => setCartOpen(false)} />
-          <div className="fixed top-0 right-0 h-full w-full sm:w-96 z-50 flex flex-col" style={{ background: "var(--surface)", boxShadow: "var(--shadow-lg)" }}>
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" style={{ color: cor }} />
-                <h2 className="font-semibold text-base" style={{ color: "var(--text-1)" }}>Seu carrinho</h2>
+          <div className="fixed inset-0 z-40" style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }} onClick={() => setCartOpen(false)} />
+          <div className="fixed top-0 right-0 h-full w-full sm:w-[400px] z-50 flex flex-col"
+            style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(24px)", boxShadow: "-8px 0 40px rgba(0,0,0,0.12)", borderLeft: "1px solid rgba(0,0,0,0.06)" }}>
+            <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: cor + "18" }}>
+                  <ShoppingCart className="w-4 h-4" style={{ color: cor }} />
+                </div>
+                <span className="font-semibold text-base" style={{ color: "#111" }}>Carrinho</span>
               </div>
-              <button onClick={() => setCartOpen(false)} className="btn-ghost p-2"><X className="w-4 h-4" /></button>
+              <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(0,0,0,0.05)", color: "#6b7280" }}>
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {cartItems.length === 0 ? (
-                <div className="text-center py-12"><span className="text-4xl mb-3 block">🛒</span><p className="text-sm" style={{ color: "var(--text-3)" }}>Carrinho vazio.</p></div>
-              ) : (
-                <div className="space-y-3">
-                  {cartItems.map((item) => (
-                    <div key={item.nome} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "var(--surface-2)" }}>
-                      <div className="relative w-12 h-14 shrink-0 rounded-lg overflow-hidden" style={{ background: "var(--surface-3)" }}>
-                        {item.imagem_url ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-1" /> : <div className="absolute inset-0 flex items-center justify-center text-xl opacity-30">🍷</div>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
-                        <p className="text-xs font-semibold mt-1" style={{ color: cor }}>{formatPrice(effectivePrice(item))}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <button onClick={() => removeFromCart(item.nome)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}><Minus className="w-3 h-3" /></button>
-                          <span className="text-xs font-medium w-4 text-center">{item.qty}</span>
-                          <button onClick={() => addToCart(item.nome)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}><Plus className="w-3 h-3" /></button>
-                          <button onClick={() => clearCartItem(item.nome)} className="ml-auto p-1" style={{ color: "var(--text-3)" }}><Trash2 className="w-3.5 h-3.5" /></button>
-                        </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              {cartItems.length === 0
+                ? <div className="text-center py-16"><span className="text-3xl opacity-20 mb-2 block">🛒</span><p className="text-sm" style={{ color: "#9ca3af" }}>Nenhum item ainda.</p></div>
+                : cartItems.map(item => (
+                  <div key={item.nome} className="flex items-center gap-3 p-3 rounded-2xl"
+                    style={{ background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.05)" }}>
+                    <div className="relative w-12 h-14 shrink-0 rounded-xl overflow-hidden" style={{ background: "#f3f4f6" }}>
+                      {item.imagem_url
+                        ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-1" />
+                        : <div className="absolute inset-0 flex items-center justify-center text-lg opacity-20">🍷</div>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium line-clamp-2 leading-tight" style={{ color: "#111" }}>{item.nome}</p>
+                      <p className="text-xs font-bold mt-1" style={{ color: cor }}>{fmt(effectivePrice(item))}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button onClick={() => removeFromCart(item.nome)}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold"
+                          style={{ background: "rgba(0,0,0,0.06)", color: "#374151" }}><Minus className="w-3 h-3" /></button>
+                        <span className="text-xs font-semibold w-4 text-center" style={{ color: "#111" }}>{item.qty}</span>
+                        <button onClick={() => addToCart(item.nome)}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center"
+                          style={{ background: cor + "18", color: cor }}><Plus className="w-3 h-3" /></button>
+                        <button onClick={() => clearItem(item.nome)} className="ml-auto" style={{ color: "#d1d5db" }}><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
             </div>
+
             {cartItems.length > 0 && (
-              <div className="p-5 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="px-6 py-5 space-y-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Total</span>
-                  <span className="font-display text-xl font-semibold" style={{ color: cor }}>{formatPrice(cartTotal.toString())}</span>
+                  <span className="text-sm" style={{ color: "#9ca3af" }}>Total</span>
+                  <span className="font-display text-xl font-bold" style={{ color: "#111" }}>{fmt(cartTotal.toString())}</span>
                 </div>
-                {data?.loja.whatsapp ? (
-                  <button onClick={sendToWhatsapp} className="w-full py-3 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2" style={{ background: "#25D366" }}>
-                    <MessageCircle className="w-4 h-4" /> Finalizar pelo WhatsApp
-                  </button>
-                ) : (
-                  <p className="text-xs text-center" style={{ color: "var(--text-3)" }}>WhatsApp não configurado para esta vinoteca.</p>
-                )}
+                {data?.loja.whatsapp
+                  ? <button onClick={sendWpp} className="w-full py-3.5 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                      style={{ background: "#25D366", boxShadow: "0 4px 16px #25D36640" }}>
+                      <MessageCircle className="w-4 h-4" /> Finalizar pelo WhatsApp
+                    </button>
+                  : <p className="text-xs text-center" style={{ color: "#9ca3af" }}>WhatsApp não configurado.</p>}
               </div>
             )}
           </div>
@@ -346,71 +346,70 @@ export default function CatalogoPage() {
 function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
   item: ItemCatalogo; cor: string; qty: number; onAdd: () => void; onRemove: () => void; compact?: boolean;
 }) {
-  function priceNum(preco: string) { return parseFloat(preco.replace(",", ".").replace(/[^0-9.]/g, "")) || 0; }
-  function formatPrice(preco: string) {
-    const num = priceNum(preco);
-    return isNaN(num) ? preco : num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  }
-  const hasOffer = item.preco_oferta && priceNum(item.preco_oferta) > 0 && priceNum(item.preco_oferta) < priceNum(item.preco);
-  const discount = hasOffer ? Math.round((1 - priceNum(item.preco_oferta!) / priceNum(item.preco)) * 100) : 0;
-  const accent = hasOffer ? "#dc2626" : cor;
+  const offer = hasOffer(item);
+  const disc = discount(item);
+  const accent = offer ? "#b91c1c" : cor;
 
   return (
-    <div className="group rounded-2xl overflow-hidden flex flex-col h-full transition-all duration-300"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 8px 24px ${cor}1a`; e.currentTarget.style.borderColor = cor + "40"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "var(--shadow-sm)"; e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.transform = "translateY(0)"; }}>
-      <div className="relative aspect-[3/4]" style={{ background: `radial-gradient(circle at 50% 30%, ${cor}08, var(--surface-2))` }}>
-        {item.imagem_url ? (
-          <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-4 group-hover:scale-[1.06] transition-transform duration-500 ease-out" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center"><span className="text-5xl opacity-15">🍷</span></div>
+    <div className="group flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300"
+      style={{ background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)" }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.10), 0 0 0 1.5px ${cor}30`; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)"; }}>
+
+      {/* Image */}
+      <div className="relative" style={{ aspectRatio: "3/4", background: `radial-gradient(circle at 60% 20%, ${cor}0A, #f9fafb)` }}>
+        {item.imagem_url
+          ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.07]" />
+          : <div className="absolute inset-0 flex items-center justify-center"><span className="text-4xl opacity-10">🍷</span></div>}
+
+        {/* Badges */}
+        {offer && (
+          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+            style={{ background: "#b91c1c" }}>-{disc}%</div>
         )}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
-          {!hasOffer && item.estoque <= 5 ? (
-            <span className="text-[10px] font-semibold px-2 py-1 rounded-full backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.85)", color: cor, border: `1px solid ${cor}30` }}>Últimas {item.estoque}</span>
-          ) : <span />}
-          {hasOffer && <span className="text-[10px] font-bold px-2 py-1 rounded-full text-white" style={{ background: "#dc2626" }}>-{discount}%</span>}
-        </div>
-        {!compact && (item.uva) && (
-          <div className="absolute bottom-2.5 left-2.5">
-            <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.85)", color: cor }}>
-              <Grape className="w-2.5 h-2.5" /> {item.uva}
-            </span>
+        {!offer && item.estoque <= 5 && item.estoque > 0 && (
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
+            style={{ background: "rgba(255,255,255,0.9)", color: cor, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+            {item.estoque} restantes
           </div>
         )}
       </div>
-      <div className="p-3 flex-1 flex flex-col">
-        <p className="text-xs font-semibold leading-snug line-clamp-2" style={{ color: "var(--text-1)" }}>{item.nome}</p>
-        {item.produtor && !compact && <p className="text-[11px] mt-1 truncate" style={{ color: "var(--text-3)" }}>{item.produtor}{item.pais ? ` · ${item.pais}` : ""}</p>}
-        <div className="mt-auto">
-          <div className="mt-3 pt-3 flex items-end justify-between gap-2" style={{ borderTop: "1px dashed var(--border)" }}>
-            <div>
-              {hasOffer ? (
-                <>
-                  <p className="text-[10px] line-through" style={{ color: "var(--text-3)" }}>{formatPrice(item.preco)}</p>
-                  <p className="font-display text-base font-bold" style={{ color: accent }}>{formatPrice(item.preco_oferta!)}</p>
-                </>
-              ) : (
-                <p className="font-display text-base font-bold" style={{ color: accent }}>{formatPrice(item.preco)}</p>
-              )}
-            </div>
-            {!compact && <p className="text-[10px] pb-0.5" style={{ color: "var(--text-3)" }}>{item.estoque} un.</p>}
-          </div>
-          <div className="mt-2.5">
-            {qty === 0 ? (
-              <button onClick={onAdd} className="w-full py-2 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 active:scale-95 transition-all" style={{ background: accent }}>
-                <Plus className="w-3.5 h-3.5" /> Adicionar
-              </button>
-            ) : (
-              <div className="flex items-center justify-between rounded-xl overflow-hidden" style={{ background: accent + "12", border: `1px solid ${accent}25` }}>
-                <button onClick={onRemove} className="p-2" style={{ color: accent }}><Minus className="w-3.5 h-3.5" /></button>
-                <span className="text-xs font-bold" style={{ color: accent }}>{qty} no carrinho</span>
-                <button onClick={onAdd} className="p-2" style={{ color: accent }}><Plus className="w-3.5 h-3.5" /></button>
-              </div>
-            )}
-          </div>
+
+      {/* Info */}
+      <div className="flex flex-col flex-1 p-3 gap-2">
+        <div className="flex-1">
+          <p className="text-xs font-semibold leading-tight line-clamp-2" style={{ color: "#111" }}>{item.nome}</p>
+          {!compact && item.uva && (
+            <p className="text-[10px] mt-1 font-medium" style={{ color: "#9ca3af" }}>{item.uva}{item.pais ? ` · ${item.pais}` : ""}</p>
+          )}
         </div>
+
+        {/* Price */}
+        <div className="flex items-end justify-between">
+          <div>
+            {offer
+              ? <>
+                  <p className="text-[9px] line-through leading-none" style={{ color: "#d1d5db" }}>{fmt(item.preco)}</p>
+                  <p className="text-sm font-bold leading-tight font-display" style={{ color: accent }}>{fmt(item.preco_oferta!)}</p>
+                </>
+              : <p className="text-sm font-bold font-display" style={{ color: accent }}>{fmt(item.preco)}</p>}
+          </div>
+          {!compact && <p className="text-[9px] leading-none pb-0.5" style={{ color: "#e5e7eb" }}>{item.estoque} un</p>}
+        </div>
+
+        {/* Cart control */}
+        {qty === 0
+          ? <button onClick={onAdd}
+              className="w-full py-2 rounded-xl text-xs font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-1"
+              style={{ background: accent }}>
+              <Plus className="w-3 h-3" /> Adicionar
+            </button>
+          : <div className="flex items-center justify-between rounded-xl py-1.5 px-2"
+              style={{ background: accent + "10", border: `1px solid ${accent}20` }}>
+              <button onClick={onRemove} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: accent }}><Minus className="w-3 h-3" /></button>
+              <span className="text-xs font-bold" style={{ color: accent }}>{qty}</span>
+              <button onClick={onAdd} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: accent }}><Plus className="w-3 h-3" /></button>
+            </div>}
       </div>
     </div>
   );
