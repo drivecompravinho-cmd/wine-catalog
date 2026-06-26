@@ -94,10 +94,11 @@ export default function CatalogoPage() {
 
   function sendWpp() {
     if (!data?.loja.whatsapp) return;
-    const lines = [`Olá! Pedido em *${data.loja.nome}*:`, ""];
+    const lines = [`Olá! Segue minha lista de compras da *${data.loja.nome}*:`, ""];
     cartItems.forEach(i => lines.push(`• ${i.qty}x ${i.nome} — ${fmt(effectivePrice(i))}`));
     lines.push("", `*Total: ${fmt(cartTotal.toString())}*`);
-    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("
+"))}`, "_blank");
   }
 
   if (loading) return (
@@ -286,7 +287,7 @@ export default function CatalogoPage() {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: cor + "18" }}>
                   <ShoppingCart className="w-4 h-4" style={{ color: cor }} />
                 </div>
-                <span className="font-semibold text-base" style={{ color: "#111" }}>Carrinho</span>
+                <span className="font-semibold text-base" style={{ color: "#111" }}>Minha lista</span>
               </div>
               <button onClick={() => setCartOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ background: "rgba(0,0,0,0.05)", color: "#6b7280" }}>
@@ -325,16 +326,19 @@ export default function CatalogoPage() {
 
             {cartItems.length > 0 && (
               <div className="px-6 py-5 space-y-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: "#9ca3af" }}>Total</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium" style={{ color: "#6b7280" }}>Total estimado</span>
                   <span className="font-display text-xl font-bold" style={{ color: "#111" }}>{fmt(cartTotal.toString())}</span>
                 </div>
+                <p className="text-[11px] text-center pb-1" style={{ color: "#9ca3af" }}>
+                  Envie sua lista de compras pelo WhatsApp
+                </p>
                 {data?.loja.whatsapp
                   ? <button onClick={sendWpp} className="w-full py-3.5 rounded-2xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
                       style={{ background: "#25D366", boxShadow: "0 4px 16px #25D36640" }}>
-                      <MessageCircle className="w-4 h-4" /> Finalizar pelo WhatsApp
+                      <MessageCircle className="w-4 h-4" /> Enviar lista pelo WhatsApp
                     </button>
-                  : <p className="text-xs text-center" style={{ color: "#9ca3af" }}>WhatsApp não configurado.</p>}
+                  : <p className="text-xs text-center" style={{ color: "#9ca3af" }}>WhatsApp não configurado para esta vinoteca.</p>}
               </div>
             )}
           </div>
