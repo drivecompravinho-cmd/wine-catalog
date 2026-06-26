@@ -164,10 +164,11 @@ export default function CatalogoPage() {
             </div>
 
             {/* Social actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
               {data?.loja.whatsapp && (
-                <a href={`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-white transition-opacity hover:opacity-85"
+                <a href={`https://api.whatsapp.com/send/?phone=${data.loja.whatsapp.replace(/\D/g, "")}&text=${encodeURIComponent("Olá! Vim do CompraVinho e quero mais informações.")}&type=phone_number&app_absent=0`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold text-white transition-all hover:opacity-85 hover:scale-105"
                   style={{ background: "#25D366", boxShadow: "0 2px 8px #25D36640" }}>
                   <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                 </a>
