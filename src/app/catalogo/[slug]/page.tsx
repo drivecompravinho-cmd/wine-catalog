@@ -358,7 +358,7 @@ function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
       onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04)"; }}>
 
       {/* Image — compact, no excess padding */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "#f8f8f8" }}>
+      <div className="relative overflow-hidden" style={{ aspectRatio: "2/3", background: "#f8f8f8" }}>
         {item.imagem_url
           ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-2 transition-transform duration-400 group-hover:scale-[1.05]" />
           : <div className="absolute inset-0 flex items-center justify-center"><span className="text-3xl opacity-10">🍷</span></div>}
@@ -375,8 +375,7 @@ function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
           </div>
         )}
 
-        {/* Bottom accent bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(to right, ${accent}60, transparent)` }} />
+
       </div>
 
       {/* Info */}
