@@ -248,14 +248,80 @@ export default function CatalogoPage() {
           {filtered.length} {filtered.length === 1 ? "vinho disponível" : "vinhos disponíveis"}
         </p>
 
-        {filtered.length === 0
-          ? <div className="text-center py-20"><span className="text-4xl mb-3 block opacity-30">🍾</span><p className="text-sm" style={{ color: "#9ca3af" }}>Nenhum vinho encontrado.</p></div>
-          : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {filtered.map((item, i) => (
-                <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />
-              ))}
-            </div>
-        }
+        {filtered.length === 0 ? (
+          <div className="text-center py-20"><span className="text-4xl mb-3 block opacity-30">🍾</span><p className="text-sm" style={{ color: "#9ca3af" }}>Nenhum vinho encontrado.</p></div>
+        ) : (
+          <>
+            {/* Primeiros 5 — cards grandes em destaque */}
+            {filtered.slice(0, 5).length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                {filtered.slice(0, 5).map((item, i) => (
+                  <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />
+                ))}
+              </div>
+            )}
+
+            {/* Restante — lista compacta */}
+            {filtered.slice(5).length > 0 && (
+              <div className="rounded-2xl overflow-hidden" style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)" }}>
+                {filtered.slice(5).map((item, i) => {
+                  const offer = hasOffer(item);
+                  const accent = offer ? "#b91c1c" : cor;
+                  const qty = cart[item.nome] ?? 0;
+                  const disc = offer ? Math.round((1 - priceNum(item.preco_oferta!) / priceNum(item.preco)) * 100) : 0;
+                  return (
+                    <div key={i} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50"
+                      style={{ borderBottom: i < filtered.slice(5).length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                      {/* Thumb */}
+                      <div className="relative w-9 h-11 shrink-0 rounded-lg overflow-hidden" style={{ background: "#f8f8f8" }}>
+                        {item.imagem_url
+                          ? <img src={item.imagem_url} alt={item.nome} className="w-full h-full object-contain p-0.5" />
+                          : <div className="w-full h-full flex items-center justify-center text-base opacity-15">🍷</div>}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate" style={{ color: "#111" }}>{item.nome}</p>
+                        <p className="text-[10px] truncate" style={{ color: "#9ca3af" }}>
+                          {[item.uva, item.pais].filter(Boolean).join(" · ")}
+                        </p>
+                      </div>
+                      {/* Preço */}
+                      <div className="text-right shrink-0">
+                        {offer ? (
+                          <>
+                            <p className="text-[9px] line-through leading-none" style={{ color: "#d1d5db" }}>{fmt(item.preco)}</p>
+                            <p className="text-xs font-bold font-display" style={{ color: accent }}>{fmt(item.preco_oferta!)}</p>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: "#dc2626" }}>-{disc}%</span>
+                          </>
+                        ) : (
+                          <p className="text-xs font-bold font-display" style={{ color: accent }}>{fmt(item.preco)}</p>
+                        )}
+                        {item.preco_ars && <p className="text-[9px]" style={{ color: "#9ca3af" }}>ARS$ {item.preco_ars}</p>}
+                      </div>
+                      {/* Cart */}
+                      <div className="shrink-0 ml-2">
+                        {qty === 0 ? (
+                          <button onClick={() => addToCart(item.nome)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-white transition-all active:scale-95"
+                            style={{ background: accent }}>
+                            <Plus className="w-3 h-3" /> Add
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1.5 rounded-xl px-2 py-1"
+                            style={{ background: accent + "10", border: `1px solid ${accent}20` }}>
+                            <button onClick={() => removeFromCart(item.nome)} style={{ color: accent }}><Minus className="w-3 h-3" /></button>
+                            <span className="text-[11px] font-bold w-4 text-center" style={{ color: accent }}>{qty}</span>
+                            <button onClick={() => addToCart(item.nome)} style={{ color: accent }}><Plus className="w-3 h-3" /></button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
 
         <div className="text-center mt-12 space-y-1">
           <p className="text-xs" style={{ color: "#9ca3af" }}>
