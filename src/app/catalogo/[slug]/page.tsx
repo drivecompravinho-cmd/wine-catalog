@@ -257,9 +257,14 @@ export default function CatalogoPage() {
             </div>
         }
 
-        <p className="text-center text-xs mt-12" style={{ color: "#d1d5db" }}>
-          Atualizado em {new Date().toLocaleDateString("pt-BR")}
-        </p>
+        <div className="text-center mt-12 space-y-1">
+          <p className="text-xs" style={{ color: "#9ca3af" }}>
+            Atualizado em {new Date().toLocaleDateString("pt-BR")}
+          </p>
+          <p className="text-[11px] max-w-sm mx-auto leading-relaxed" style={{ color: "#d1d5db" }}>
+            ⚠️ Os preços exibidos são uma referência e podem sofrer alterações. Consulte sempre o vendedor no momento da compra para confirmar valores e disponibilidade.
+          </p>
+        </div>
       </div>
 
       {/* ── CART BUTTON ── */}
