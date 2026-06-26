@@ -8,7 +8,7 @@ import Image from "next/image";
 interface VinhoDB { id: string; nome: string; produtor: string; uva: string; pais: string; }
 interface ItemLinha {
   id: string; vinho_id: string; nome: string; produtor: string; uva: string; pais: string;
-  preco: string; preco_oferta: string; estoque: number; ativo: boolean; dirty: boolean;
+  preco: string; preco_oferta: string; preco_ars?: string; estoque: number; ativo: boolean; dirty: boolean;
 }
 interface LojaInfo { nome: string; logo_url: string | null; cor_realce: string; }
 
@@ -71,10 +71,10 @@ export default function MinhaLojaPage() {
   async function adicionarVinho(vinho: VinhoDB) {
     const res = await fetch(`/api/minha-loja/${slug}/itens`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ vinho_id: vinho.id, preco: "", preco_oferta: "", estoque: 0, ativo: true }),
+      body: JSON.stringify({ vinho_id: vinho.id, preco: "", preco_oferta: "", preco_ars: "", estoque: 0, ativo: true }),
     });
     const novo = await res.json();
-    setItens(prev => [...prev, { ...vinho, id: novo.id, vinho_id: vinho.id, preco: "", preco_oferta: "", estoque: 0, ativo: true, dirty: false }]);
+    setItens(prev => [...prev, { ...vinho, id: novo.id, vinho_id: vinho.id, preco: "", preco_oferta: "", preco_ars: "", estoque: 0, ativo: true, dirty: false }]);
     setBusca(""); setResultados([]); setShowBusca(false);
   }
 
@@ -86,7 +86,7 @@ export default function MinhaLojaPage() {
     setSaving(item.id);
     await fetch(`/api/minha-loja/${slug}/itens/${item.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ preco: item.preco, preco_oferta: item.preco_oferta || null, estoque: item.estoque, ativo: item.ativo }),
+      body: JSON.stringify({ preco: item.preco, preco_oferta: item.preco_oferta || null, preco_ars: item.preco_ars || null, estoque: item.estoque, ativo: item.ativo }),
     });
     setItens(prev => prev.map(i => i.id === item.id ? { ...i, dirty: false } : i));
     setSaving(null); setSaved(item.id); setTimeout(() => setSaved(null), 2000);
@@ -281,9 +281,10 @@ export default function MinhaLojaPage() {
             {/* Table header */}
             <div className="grid px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider"
               style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgba(0,0,0,0.06)",
-                gridTemplateColumns: "1fr 110px 110px 80px 60px 80px" }}>
+                gridTemplateColumns: "1fr 90px 90px 90px 80px 60px 80px" }}>
               <span style={{ color: "#9ca3af" }}>Rótulo</span>
-              <span style={{ color: "#9ca3af" }}>Preço</span>
+              <span style={{ color: "#9ca3af" }}>Preço R$</span>
+              <span style={{ color: "#9ca3af" }}>Preço ARS$</span>
               <span className="flex items-center gap-1" style={{ color: "#9ca3af" }}><Tag className="w-3 h-3" /> Oferta</span>
               <span style={{ color: "#9ca3af" }}>Estoque</span>
               <span className="text-center" style={{ color: "#9ca3af" }}>Ativo</span>
@@ -295,7 +296,7 @@ export default function MinhaLojaPage() {
               <div key={item.id}
                 className="grid items-center px-4 py-3 transition-colors hover:bg-white"
                 style={{
-                  gridTemplateColumns: "1fr 110px 110px 80px 60px 80px",
+                  gridTemplateColumns: "1fr 90px 90px 90px 80px 60px 80px",
                   background: idx % 2 === 0 ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)",
                   borderBottom: "1px solid rgba(0,0,0,0.04)",
                 }}>
