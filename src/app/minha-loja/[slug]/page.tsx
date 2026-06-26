@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock, Tag, ArrowRight } from "lucide-react";
+import { Search, Plus, Trash2, Check, LogOut, Save, X, Lock, Tag, ArrowRight, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 interface VinhoDB { id: string; nome: string; produtor: string; uva: string; pais: string; }
@@ -15,6 +15,7 @@ export default function MinhaLojaPage() {
   const [senha, setSenha] = useState("");
   const [senhaErro, setSenhaErro] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showSenha, setShowSenha] = useState(false);
   const [loja, setLoja] = useState<LojaInfo | null>(null);
   const [itens, setItens] = useState<ItemLinha[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,15 +121,16 @@ export default function MinhaLojaPage() {
                 <Image src="/logo-compravinho.svg" alt="COMPRAVINHO" fill className="object-contain" style={{ filter: "brightness(0) invert(1)" }} />
               </div>
               <p className="text-xs mt-3" style={{ color: "rgba(255,255,255,0.4)" }}>Gestão do catálogo</p>
+              <p className="text-[10px] mt-1 font-mono tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>/{slug}</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-3">
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.35)" }} />
                 <input
-                  type="password" value={senha}
+                  type={showSenha ? "text" : "password"} value={senha}
                   onChange={(e) => { setSenha(e.target.value); setSenhaErro(""); }}
-                  className="w-full pl-11 pr-12 py-3.5 rounded-2xl text-sm outline-none transition-all"
+                  className="w-full pl-11 pr-20 py-3.5 rounded-2xl text-sm outline-none transition-all"
                   placeholder="Senha de acesso"
                   autoFocus
                   style={{
@@ -139,6 +141,11 @@ export default function MinhaLojaPage() {
                   onFocus={(e) => { e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.borderColor = "rgba(168,85,247,0.5)"; }}
                   onBlur={(e) => { e.target.style.background = "rgba(255,255,255,0.05)"; e.target.style.borderColor = senhaErro ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.1)"; }}
                 />
+                <button type="button" onClick={() => setShowSenha(p => !p)}
+                  className="absolute right-11 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center"
+                  style={{ color: "rgba(255,255,255,0.4)" }}>
+                  {showSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
                 <button type="submit" disabled={submitting}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
                   style={{ background: "linear-gradient(135deg, #A855F7, #6B21A8)" }}>
