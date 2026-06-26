@@ -33,6 +33,7 @@ export interface ItemCatalogo {
   nome: string;
   preco: string;
   preco_oferta?: string | null;
+  preco_ars?: string | null;
   estoque: number;
   ativo: boolean;
   produtor?: string;
