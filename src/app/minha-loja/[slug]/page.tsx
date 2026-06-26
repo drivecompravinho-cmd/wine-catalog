@@ -314,7 +314,7 @@ export default function MinhaLojaPage() {
                     placeholder="0,00"
                     style={{ background: "rgba(0,0,0,0.04)", border: "1px solid transparent", color: "#111" }}
                     onFocus={e => { e.target.style.background = "#fff"; e.target.style.borderColor = cor + "50"; e.target.style.boxShadow = `0 0 0 2px ${cor}15`; }}
-                    onBlur2={e => { e.target.style.background = "rgba(0,0,0,0.04)"; e.target.style.borderColor = "transparent"; e.target.style.boxShadow = "none"; }} />
+                    />
                 </div>
 
                 {/* Oferta */}
