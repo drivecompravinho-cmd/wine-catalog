@@ -31,8 +31,15 @@ export default function HomePage() {
 
   function handleForm(e: React.FormEvent) {
     e.preventDefault();
-    const msg = `Olá! Tenho interesse no CompraVinho.\n\nNome: ${form.nome}\nEmail: ${form.email}\nWhatsApp: ${form.whatsapp}\n\n${form.mensagem}`;
-    window.open(`https://wa.me/5549999999999?text=${encodeURIComponent(msg)}`, "_blank");
+    const msg = `Olá! Tenho interesse no CompraVinho.
+
+Nome: ${form.nome}
+Email: ${form.email}
+WhatsApp: ${form.whatsapp}
+
+${form.mensagem}`;
+    const wppUrl = `https://api.whatsapp.com/send/?phone=5549991386761&text=${encodeURIComponent(msg)}&type=phone_number&app_absent=0`;
+    window.open(wppUrl, "_blank");
     setEnviado(true);
   }
 
