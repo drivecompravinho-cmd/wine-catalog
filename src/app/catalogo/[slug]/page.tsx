@@ -139,7 +139,7 @@ export default function CatalogoPage() {
       </div>
 
       {/* ── PROFILE CARD ── glassmorphism */}
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="relative -mt-14 z-10 rounded-3xl overflow-hidden"
           style={{
             background: "rgba(255,255,255,0.72)",
@@ -200,7 +200,7 @@ export default function CatalogoPage() {
       </div>
 
       {/* ── CONTENT ── */}
-      <div className="max-w-4xl mx-auto px-4 pt-6 pb-24">
+      <div className="max-w-6xl mx-auto px-4 pt-6 pb-24">
 
         {/* Ofertas */}
         {ofertas.length > 0 && (
@@ -249,7 +249,7 @@ export default function CatalogoPage() {
 
         {filtered.length === 0
           ? <div className="text-center py-20"><span className="text-4xl mb-3 block opacity-30">🍾</span><p className="text-sm" style={{ color: "#9ca3af" }}>Nenhum vinho encontrado.</p></div>
-          : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {filtered.map((item, i) => (
                 <WineCard key={i} item={item} cor={cor} qty={cart[item.nome] ?? 0} onAdd={() => addToCart(item.nome)} onRemove={() => removeFromCart(item.nome)} />
               ))}
@@ -352,64 +352,66 @@ function WineCard({ item, cor, qty, onAdd, onRemove, compact }: {
   const accent = offer ? "#b91c1c" : cor;
 
   return (
-    <div className="group flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300"
-      style={{ background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)" }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 32px rgba(0,0,0,0.10), 0 0 0 1.5px ${cor}30`; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)"; }}>
+    <div className="group flex flex-col h-full rounded-xl overflow-hidden transition-all duration-200"
+      style={{ background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04)" }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 20px rgba(0,0,0,0.09), 0 0 0 1px ${cor}25`; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04)"; }}>
 
-      {/* Image */}
-      <div className="relative" style={{ aspectRatio: "3/4", background: `radial-gradient(circle at 60% 20%, ${cor}0A, #f9fafb)` }}>
+      {/* Image — compact, no excess padding */}
+      <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "#f8f8f8" }}>
         {item.imagem_url
-          ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-3 transition-transform duration-500 group-hover:scale-[1.07]" />
-          : <div className="absolute inset-0 flex items-center justify-center"><span className="text-4xl opacity-10">🍷</span></div>}
+          ? <Image src={item.imagem_url} alt={item.nome} fill className="object-contain p-2 transition-transform duration-400 group-hover:scale-[1.05]" />
+          : <div className="absolute inset-0 flex items-center justify-center"><span className="text-3xl opacity-10">🍷</span></div>}
 
         {/* Badges */}
         {offer && (
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+          <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white"
             style={{ background: "#b91c1c" }}>-{disc}%</div>
         )}
         {!offer && item.estoque <= 5 && item.estoque > 0 && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium"
-            style={{ background: "rgba(255,255,255,0.9)", color: cor, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            {item.estoque} restantes
+          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-medium"
+            style={{ background: "rgba(255,255,255,0.92)", color: cor, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+            {item.estoque} un
           </div>
         )}
+
+        {/* Bottom accent bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(to right, ${accent}60, transparent)` }} />
       </div>
 
       {/* Info */}
-      <div className="flex flex-col flex-1 p-3 gap-2">
-        <div className="flex-1">
-          <p className="text-xs font-semibold leading-tight line-clamp-2" style={{ color: "#111" }}>{item.nome}</p>
-          {!compact && item.uva && (
-            <p className="text-[10px] mt-1 font-medium" style={{ color: "#9ca3af" }}>{item.uva}{item.pais ? ` · ${item.pais}` : ""}</p>
-          )}
-        </div>
+      <div className="flex flex-col flex-1 px-2.5 py-2 gap-1.5">
+        <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: "#111" }}>{item.nome}</p>
+        {!compact && item.uva && (
+          <p className="text-[9px] font-medium truncate" style={{ color: "#bbb" }}>{item.uva}{item.pais ? ` · ${item.pais}` : ""}</p>
+        )}
 
-        {/* Price */}
-        <div className="flex items-end justify-between">
+        <div className="mt-auto pt-1.5 flex items-center justify-between" style={{ borderTop: "1px solid #f3f3f3" }}>
           <div>
-            {offer
-              ? <>
-                  <p className="text-[9px] line-through leading-none" style={{ color: "#d1d5db" }}>{fmt(item.preco)}</p>
-                  <p className="text-sm font-bold leading-tight font-display" style={{ color: accent }}>{fmt(item.preco_oferta!)}</p>
-                </>
-              : <p className="text-sm font-bold font-display" style={{ color: accent }}>{fmt(item.preco)}</p>}
+            {offer ? (
+              <>
+                <p className="text-[9px] line-through leading-none" style={{ color: "#ddd" }}>{fmt(item.preco)}</p>
+                <p className="text-xs font-bold font-display" style={{ color: accent }}>{fmt(item.preco_oferta!)}</p>
+              </>
+            ) : (
+              <p className="text-xs font-bold font-display" style={{ color: accent }}>{fmt(item.preco)}</p>
+            )}
           </div>
-          {!compact && <p className="text-[9px] leading-none pb-0.5" style={{ color: "#e5e7eb" }}>{item.estoque} un</p>}
+          {!compact && <p className="text-[9px]" style={{ color: "#e0e0e0" }}>{item.estoque} un</p>}
         </div>
 
         {/* Cart control */}
         {qty === 0
           ? <button onClick={onAdd}
-              className="w-full py-2 rounded-xl text-xs font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-1"
+              className="w-full py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all active:scale-95 flex items-center justify-center gap-1"
               style={{ background: accent }}>
               <Plus className="w-3 h-3" /> Adicionar
             </button>
-          : <div className="flex items-center justify-between rounded-xl py-1.5 px-2"
+          : <div className="flex items-center justify-between rounded-lg py-1 px-1.5"
               style={{ background: accent + "10", border: `1px solid ${accent}20` }}>
-              <button onClick={onRemove} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: accent }}><Minus className="w-3 h-3" /></button>
-              <span className="text-xs font-bold" style={{ color: accent }}>{qty}</span>
-              <button onClick={onAdd} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: accent }}><Plus className="w-3 h-3" /></button>
+              <button onClick={onRemove} className="w-5 h-5 rounded-md flex items-center justify-center" style={{ color: accent }}><Minus className="w-2.5 h-2.5" /></button>
+              <span className="text-[11px] font-bold" style={{ color: accent }}>{qty}</span>
+              <button onClick={onAdd} className="w-5 h-5 rounded-md flex items-center justify-center" style={{ color: accent }}><Plus className="w-2.5 h-2.5" /></button>
             </div>}
       </div>
     </div>
