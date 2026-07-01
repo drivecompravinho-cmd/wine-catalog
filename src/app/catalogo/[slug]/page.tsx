@@ -97,7 +97,7 @@ export default function CatalogoPage() {
     const lines = [`Olá! Segue minha lista de compras da *${data.loja.nome}*:`, ""];
     cartItems.forEach(i => lines.push(`• ${i.qty}x ${i.nome} — ${fmt(effectivePrice(i))}`));
     lines.push("", `*Total: ${fmt(cartTotal.toString())}*`);
-    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+    window.open(`https://api.whatsapp.com/send/?phone=${data.loja.whatsapp.replace(/\D/g, "")}&text=${encodeURIComponent(lines.join("\n"))}&type=phone_number&app_absent=0`, "_blank");
   }
 
 
