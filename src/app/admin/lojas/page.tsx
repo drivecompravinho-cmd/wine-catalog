@@ -248,7 +248,7 @@ export default function LojasPage() {
 
   function getCatalogoUrl(loja: Loja) {
     if (loja.dominio_customizado) return `https://${loja.dominio_customizado}`;
-    return `${window.location.origin}/catalogo/${loja.slug}`;
+    return `https://${loja.slug}.compravinho.com.br`;
   }
 
   return (
@@ -317,7 +317,7 @@ export default function LojasPage() {
                   <div className="px-4 py-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid var(--border)" }}>
                     <a href={getCatalogoUrl(loja)} target="_blank" className="btn-outline text-xs py-1.5"><ExternalLink className="w-3.5 h-3.5" /> Ver catálogo</a>
                     <a href={`/minha-loja/${loja.slug}`} target="_blank" className="btn-outline text-xs py-1.5"><LayoutDashboard className="w-3.5 h-3.5" /> Painel do cliente</a>
-                    <button onClick={() => copyText(`${window.location.origin}/catalogo/${loja.slug}`, `link-${loja.id}`)} className="btn-ghost text-xs py-1.5">
+                    <button onClick={() => copyText(getCatalogoUrl(loja), `link-${loja.id}`)} className="btn-ghost text-xs py-1.5">
                       {copied === `link-${loja.id}` ? <><Check className="w-3.5 h-3.5" style={{ color: "#1a7a4a" }} /> Copiado!</> : <><Copy className="w-3.5 h-3.5" /> Copiar link</>}
                     </button>
                   </div>
