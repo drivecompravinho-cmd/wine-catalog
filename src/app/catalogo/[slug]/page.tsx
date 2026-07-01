@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle, Tag, Instagram, Facebook, Navigation } from "lucide-react";
+import { Search, MapPin, Grape, RefreshCw, ShoppingCart, Plus, Minus, X, Trash2, MessageCircle, Tag, Instagram, Facebook, Navigation, Printer } from "lucide-react";
 import type { ItemCatalogo } from "@/types";
 
 interface CatalogData {
@@ -101,7 +101,44 @@ export default function CatalogoPage() {
 "))}`, "_blank");
   }
 
-  if (loading) return (
+
+  function printList() {
+    const loja = data?.loja;
+    const html = `<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Lista – ${loja?.nome ?? 'Vinoteca'}</title>
+    <style>
+      body { font-family: Georgia, serif; max-width: 620px; margin: 40px auto; color: #111; font-size: 14px; }
+      h1 { font-size: 22px; margin-bottom: 4px; }
+      .sub { color: #888; font-size: 12px; margin-bottom: 24px; }
+      table { width: 100%; border-collapse: collapse; }
+      th { text-align: left; padding: 8px 0; border-bottom: 2px solid #111; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+      td { padding: 9px 0; border-bottom: 1px solid #eee; vertical-align: top; }
+      td:first-child { width: 36px; font-weight: bold; }
+      td:last-child { text-align: right; font-weight: bold; white-space: nowrap; }
+      td:nth-child(3) { text-align: right; white-space: nowrap; }
+      .total-row { margin-top: 20px; text-align: right; font-size: 18px; font-weight: bold; border-top: 2px solid #111; padding-top: 12px; }
+      .footer { margin-top: 40px; font-size: 10px; color: #aaa; text-align: center; }
+      @media print { @page { margin: 20mm; } }
+    </style>
+  </head><body>
+    <h1>${loja?.nome ?? 'Vinoteca'}</h1>
+    <p class="sub">Lista de compras · ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+    <table>
+      <thead><tr><th>Qtd</th><th>Vinho</th><th style="text-align:right">Unitário</th><th style="text-align:right">Subtotal</th></tr></thead>
+      <tbody>
+        ${cartItems.map(i => `<tr><td>${i.qty}x</td><td>${i.nome}</td><td style="text-align:right">${fmt(effectivePrice(i))}</td><td style="text-align:right">${fmt((priceNum(effectivePrice(i)) * i.qty).toString())}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="total-row">Total estimado: ${fmt(cartTotal.toString())}</div>
+    <div class="footer">⚠️ Preços sujeitos a alteração. Consulte o vendedor no momento da compra.<br/>${loja?.nome ?? ''} · Gerado pelo CompraVinho</div>
+    <script>window.onload = function() { window.print(); }<\/script>
+  </body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+  }
+
+    if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "#f4f4f6" }}>
       <div className="w-7 h-7 border-2 rounded-full animate-spin" style={{ borderColor: "#6B21A8", borderTopColor: "transparent" }} />
     </div>
