@@ -97,8 +97,7 @@ export default function CatalogoPage() {
     const lines = [`Olá! Segue minha lista de compras da *${data.loja.nome}*:`, ""];
     cartItems.forEach(i => lines.push(`• ${i.qty}x ${i.nome} — ${fmt(effectivePrice(i))}`));
     lines.push("", `*Total: ${fmt(cartTotal.toString())}*`);
-    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("
-"))}`, "_blank");
+    window.open(`https://wa.me/${data.loja.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   }
 
 
@@ -447,6 +446,11 @@ export default function CatalogoPage() {
                       <MessageCircle className="w-4 h-4" /> Enviar lista pelo WhatsApp
                     </button>
                   : <p className="text-xs text-center" style={{ color: "#9ca3af" }}>WhatsApp não configurado para esta vinoteca.</p>}
+              <button onClick={printList}
+                className="w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-80"
+                style={{ background: "rgba(0,0,0,0.05)", color: "#374151", border: "1px solid rgba(0,0,0,0.08)" }}>
+                <Printer className="w-4 h-4" /> Imprimir / Salvar PDF
+              </button>
               </div>
             )}
           </div>
