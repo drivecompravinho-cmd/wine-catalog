@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 
+async function registerVercelDomain(slug: string) {
+  const token = process.env.VERCEL_TOKEN;
+  if (!token) return;
+  try {
+    await fetch("https://api.vercel.com/v9/projects/wine-catalog/domains", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: `${slug}.compravinho.com.br` }),
+    });
+  } catch (e) {
+    console.error("Vercel domain registration failed:", e);
+  }
+}
+
 export async function GET() {
   const supabase = createServiceClient();
   const { data: lojas, error } = await supabase
@@ -28,5 +45,11 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { data, error } = await supabase.from("lojas").insert(body).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Registra subdomínio no Vercel automaticamente
+  if (data?.slug) {
+    await registerVercelDomain(data.slug);
+  }
+
   return NextResponse.json(data);
 }
