@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     query = query.or(`nome.ilike.%${q}%,produtor.ilike.%${q}%,uva.ilike.%${q}%`);
   }
 
-  const { data, error } = await query.limit(30);
+  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
