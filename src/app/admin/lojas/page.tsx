@@ -249,8 +249,6 @@ export default function LojasPage() {
   function getCatalogoUrl(loja: Loja) {
     if (loja.dominio_customizado) return `https://${loja.dominio_customizado}`;
     return `https://${loja.slug}.compravinho.com.br`;
-  }`;
-    return `https://${loja.slug}.compravinho.com.br`;
   }
 
   return (
